@@ -25,7 +25,7 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
-      "output": "single",
+      "output": "static",
       "name": "Estron",
       "shortName": "Estron",
       "description": "Estron - Quản lý sản xuất",
