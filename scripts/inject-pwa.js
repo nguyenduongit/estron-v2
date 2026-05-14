@@ -50,5 +50,24 @@ html = html.replace(
   'overflow: hidden;\n        overscroll-behavior-y: contain;\n        -webkit-tap-highlight-color: transparent;'
 );
 
+// Add safe area CSS for PWA standalone mode
+const safeAreaCSS = `
+    <style id="pwa-safe-area">
+      #root {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        box-sizing: border-box;
+        background-color: #F2F2F7;
+      }
+      /* Fill status bar area with background color */
+      html {
+        background-color: #F2F2F7;
+      }
+    </style>`;
+
+html = html.replace('</head>', safeAreaCSS + '\n  </head>');
+
 fs.writeFileSync(distHtml, html, 'utf-8');
 console.log('✅ PWA tags injected into dist/index.html');
