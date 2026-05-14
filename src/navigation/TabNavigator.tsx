@@ -19,17 +19,16 @@ export default function TabNavigator() {
           borderTopColor: '#C6C6C8',
           borderTopWidth: 0.5,
           paddingTop: 6,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
-          height: Platform.OS === 'ios' ? 88 : 60,
+          paddingBottom: Platform.OS === 'web' ? 4 : (Platform.OS === 'ios' ? 28 : 8),
+          height: Platform.OS === 'web' ? 56 : (Platform.OS === 'ios' ? 88 : 60),
         },
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: '500',
           letterSpacing: -0.24,
-          marginTop: -2,
         },
         tabBarIconStyle: {
-          marginBottom: 0,
+          marginBottom: -2,
         },
       }}
     >

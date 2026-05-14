@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#F2F2F7',
         paddingHorizontal: 16,
         paddingBottom: 8,
-        paddingTop: 8,
+        paddingTop: 16,
     },
     headerTitle: {
         fontSize: 34,
