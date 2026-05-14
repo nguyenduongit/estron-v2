@@ -54,14 +54,13 @@ html = html.replace(
 const safeAreaCSS = `
     <style id="pwa-safe-area">
       #root {
-        padding-top: env(safe-area-inset-top);
         padding-bottom: env(safe-area-inset-bottom);
         padding-left: env(safe-area-inset-left);
         padding-right: env(safe-area-inset-right);
         box-sizing: border-box;
-        background-color: #F2F2F7;
+        background-color: #F9F9F9; /* Match Navigator background */
       }
-      /* Fill status bar area with background color */
+      /* Fill status bar area with screen background color */
       html {
         background-color: #F2F2F7;
       }
