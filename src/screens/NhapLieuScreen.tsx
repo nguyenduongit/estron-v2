@@ -421,14 +421,16 @@ const styles = StyleSheet.create({
         marginLeft: 16,
     },
     label: {
-        width: 140,
+        width: 165,
         fontSize: 17,
         color: '#000000',
         fontWeight: '400',
     },
     valueContainer: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'flex-end',
     },
     dateText: {
         fontSize: 17,
@@ -443,7 +445,7 @@ const styles = StyleSheet.create({
         padding: 4,
     },
     pickerWrapper: {
-        width: 130,
+        flex: 1,
         ...(Platform.OS === 'web' && {
             borderWidth: 0,
         }),
@@ -461,8 +463,10 @@ const styles = StyleSheet.create({
         }),
     },
     infoText: {
+        flex: 1,
         fontSize: 17,
         color: '#8E8E93',
+        textAlign: 'right',
     },
     input: {
         flex: 1,
