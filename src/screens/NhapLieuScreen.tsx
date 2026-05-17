@@ -437,7 +437,10 @@ const styles = StyleSheet.create({
     dateText: {
         fontSize: 17,
         color: '#007AFF',
+        textAlign: 'right', // Căn phải text
+        flex: 1,           // Chiếm hết không gian để căn phải hiệu quả
     },
+
     icon: {
         marginLeft: 4,
     },
