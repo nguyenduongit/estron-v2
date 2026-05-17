@@ -437,14 +437,15 @@ const styles = StyleSheet.create({
     dateText: {
         fontSize: 17,
         color: '#007AFF',
-        marginRight: 8,
     },
     icon: {
         marginLeft: 4,
     },
     iconButton: {
         marginLeft: 8,
-        padding: 4,
+        paddingVertical: 4,
+        paddingLeft: 8,
+        paddingRight: 0,
     },
     pickerWrapper: {
         flex: 1,
