@@ -8,9 +8,9 @@ export const getBlobToken = () => {
 
 export const fetchUsers = async () => {
     const token = getBlobToken();
+    const filename = 'users/users.json';
     try {
-        // Find the users.json blob URL using the List API
-        const listRes = await fetch(`https://blob.vercel-storage.com/?prefix=users.json`, {
+        const listRes = await fetch(`https://blob.vercel-storage.com/?prefix=${filename}`, {
             headers: {
                 'authorization': `Bearer ${token}`,
                 'x-api-version': '7'
@@ -19,17 +19,16 @@ export const fetchUsers = async () => {
         
         if (!listRes.ok) {
             console.error("List users.json failed:", await listRes.text());
-            return []; // Probably doesn't exist yet
+            return [];
         }
 
         const data = await listRes.json();
-        const userBlob = data.blobs.find((b: any) => b.pathname === 'users.json');
+        const userBlob = data.blobs.find((b: any) => b.pathname === filename);
 
         if (!userBlob) {
-            return []; // File doesn't exist yet
+            return [];
         }
 
-        // Fetch the actual JSON content
         const contentRes = await fetch(userBlob.url);
         if (!contentRes.ok) {
             return [];
@@ -45,14 +44,15 @@ export const fetchUsers = async () => {
 
 export const saveUsers = async (users: any[]) => {
     const token = getBlobToken();
-    const response = await fetch(`https://blob.vercel-storage.com/users.json`, {
+    const filename = 'users/users.json';
+    const response = await fetch(`https://blob.vercel-storage.com/${filename}`, {
         method: 'PUT',
         headers: {
             'authorization': `Bearer ${token}`,
             'x-api-version': '7',
             'x-content-type': 'application/json',
             'x-access': 'public',
-            'x-add-random-suffix': 'false' // Very important to overwrite the same file!
+            'x-add-random-suffix': 'false'
         },
         body: JSON.stringify(users)
     });
@@ -67,7 +67,7 @@ export const saveUsers = async (users: any[]) => {
 
 export const fetchUserData = async (phone: string) => {
     const token = getBlobToken();
-    const filename = `user_data_${phone}.json`;
+    const filename = `data/user_data_${phone}.json`;
     
     try {
         const listRes = await fetch(`https://blob.vercel-storage.com/?prefix=${filename}`, {
@@ -96,7 +96,7 @@ export const fetchUserData = async (phone: string) => {
 
 export const saveUserData = async (phone: string, data: any) => {
     const token = getBlobToken();
-    const filename = `user_data_${phone}.json`;
+    const filename = `data/user_data_${phone}.json`;
     
     const response = await fetch(`https://blob.vercel-storage.com/${filename}`, {
         method: 'PUT',
