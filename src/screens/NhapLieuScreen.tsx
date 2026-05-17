@@ -21,6 +21,8 @@ export default function NhapLieuScreen() {
     const [danhSachCongDoan, setDanhSachCongDoan] = useState<CongDoan[]>([]);
     const [maCongDoan, setMaCongDoan] = useState('');
     const [soLuong, setSoLuong] = useState('');
+    const [thoiGianThucHien, setThoiGianThucHien] = useState('');
+    const [thoiGianHoTro, setThoiGianHoTro] = useState('');
     
     const [isSaving, setIsSaving] = useState(false);
     const [isLoadingData, setIsLoadingData] = useState(true);
@@ -35,6 +37,23 @@ export default function NhapLieuScreen() {
         loadUserData();
     }, []);
 
+    useEffect(() => {
+        if (fullData && fullData.nangSuat) {
+            const dateStr = date.toISOString().split('T')[0];
+            const dataForDate = fullData.nangSuat[dateStr];
+            if (dataForDate) {
+                setThoiGianThucHien(dataForDate.thoiGianThucHien ? dataForDate.thoiGianThucHien.toString() : '');
+                setThoiGianHoTro(dataForDate.thoiGianHoTro ? dataForDate.thoiGianHoTro.toString() : '');
+            } else {
+                setThoiGianThucHien('');
+                setThoiGianHoTro('');
+            }
+        } else {
+            setThoiGianThucHien('');
+            setThoiGianHoTro('');
+        }
+    }, [date, fullData]);
+
     const loadUserData = async () => {
         setIsLoadingData(true);
         try {
@@ -45,6 +64,19 @@ export default function NhapLieuScreen() {
                 
                 const data = await fetchUserData(u.phone);
                 if (data) {
+                    if (data.sanLuong && !data.nangSuat) {
+                        data.nangSuat = {};
+                        for (const [d, arr] of Object.entries(data.sanLuong)) {
+                            data.nangSuat[d] = {
+                                thoiGianThucHien: 0,
+                                thoiGianHoTro: 0,
+                                sanLuong: arr
+                            };
+                        }
+                        delete data.sanLuong;
+                    }
+                    if (!data.nangSuat) data.nangSuat = {};
+
                     setFullData(data);
                     if (data.congDoan) {
                         setDanhSachCongDoan(data.congDoan);
@@ -54,7 +86,7 @@ export default function NhapLieuScreen() {
                     }
                 } else {
                     // Initialize empty data
-                    const initialData = { congDoan: [], sanLuong: {} };
+                    const initialData = { congDoan: [], nangSuat: {} };
                     setFullData(initialData);
                 }
             }
@@ -113,10 +145,20 @@ export default function NhapLieuScreen() {
             const dateStr = date.toISOString().split('T')[0];
             const updatedData = { ...fullData };
             
-            if (!updatedData.sanLuong) updatedData.sanLuong = {};
-            if (!updatedData.sanLuong[dateStr]) updatedData.sanLuong[dateStr] = [];
+            if (!updatedData.nangSuat) updatedData.nangSuat = {};
+            
+            if (!updatedData.nangSuat[dateStr]) {
+                updatedData.nangSuat[dateStr] = {
+                    thoiGianThucHien: Number(thoiGianThucHien) || 0,
+                    thoiGianHoTro: Number(thoiGianHoTro) || 0,
+                    sanLuong: []
+                };
+            } else {
+                updatedData.nangSuat[dateStr].thoiGianThucHien = Number(thoiGianThucHien) || 0;
+                updatedData.nangSuat[dateStr].thoiGianHoTro = Number(thoiGianHoTro) || 0;
+            }
 
-            updatedData.sanLuong[dateStr].push({
+            updatedData.nangSuat[dateStr].sanLuong.push({
                 maCongDoan,
                 soLuong: Number(soLuong),
                 timestamp: new Date().toISOString()
@@ -236,6 +278,38 @@ export default function NhapLieuScreen() {
                             </View>
                         </>
                     )}
+
+                    <View style={styles.divider} />
+
+                    {/* Thời gian thực hiện */}
+                    <View style={styles.row}>
+                        <Text style={styles.label}>TG thực hiện (phút)</Text>
+                        <TextInput
+                            style={styles.input}
+                            value={thoiGianThucHien}
+                            onChangeText={setThoiGianThucHien}
+                            placeholder="Nhập phút"
+                            placeholderTextColor="#C7C7CC"
+                            keyboardType="numeric"
+                            returnKeyType="done"
+                        />
+                    </View>
+
+                    <View style={styles.divider} />
+
+                    {/* Thời gian hỗ trợ */}
+                    <View style={styles.row}>
+                        <Text style={styles.label}>TG hỗ trợ (phút)</Text>
+                        <TextInput
+                            style={styles.input}
+                            value={thoiGianHoTro}
+                            onChangeText={setThoiGianHoTro}
+                            placeholder="Nhập phút"
+                            placeholderTextColor="#C7C7CC"
+                            keyboardType="numeric"
+                            returnKeyType="done"
+                        />
+                    </View>
 
                     <View style={styles.divider} />
 
