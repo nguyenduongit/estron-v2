@@ -11,7 +11,7 @@ export default function NhapLieuScreen() {
     const [maCongDoan, setMaCongDoan] = useState('CD001');
     const [soLuong, setSoLuong] = useState('');
     const [isSaving, setIsSaving] = useState(false);
-    
+
     const [danhSachCongDoan, setDanhSachCongDoan] = useState(['CD001', 'CD002', 'CD003']);
 
     const handleAddCongDoan = () => {
@@ -27,8 +27,8 @@ export default function NhapLieuScreen() {
                 'Nhập mã công đoạn mới:',
                 [
                     { text: 'Hủy', style: 'cancel' },
-                    { 
-                        text: 'Thêm', 
+                    {
+                        text: 'Thêm',
                         onPress: (newCode) => {
                             if (newCode) {
                                 setDanhSachCongDoan([...danhSachCongDoan, newCode]);
@@ -40,10 +40,10 @@ export default function NhapLieuScreen() {
                 'plain-text'
             );
         } else {
-             const newCode = `CD00${danhSachCongDoan.length + 1}`;
-             setDanhSachCongDoan([...danhSachCongDoan, newCode]);
-             setMaCongDoan(newCode);
-             Alert.alert('Thông báo', `Đã thêm mã tự động: ${newCode}`);
+            const newCode = `CD00${danhSachCongDoan.length + 1}`;
+            setDanhSachCongDoan([...danhSachCongDoan, newCode]);
+            setMaCongDoan(newCode);
+            Alert.alert('Thông báo', `Đã thêm mã tự động: ${newCode}`);
         }
     };
 
@@ -84,7 +84,7 @@ export default function NhapLieuScreen() {
 
             const filename = `data/${Date.now()}.json`;
             // Vercel Blob Token: Need to set this in Vercel project environment variables (EXPO_PUBLIC_BLOB_READ_WRITE_TOKEN)
-            const token = process.env.EXPO_PUBLIC_BLOB_READ_WRITE_TOKEN;
+            const token = process.env.BLOB_READ_WRITE_TOKEN;
 
             if (token) {
                 await uploadToBlob(filename, JSON.stringify(data), token);
@@ -130,9 +130,9 @@ export default function NhapLieuScreen() {
                     <View style={styles.row}>
                         <Text style={styles.label}>Ngày</Text>
                         {Platform.OS === 'web' ? (
-                            <input 
-                                type="date" 
-                                value={date.toISOString().split('T')[0]} 
+                            <input
+                                type="date"
+                                value={date.toISOString().split('T')[0]}
                                 onChange={(e) => {
                                     if (e.target.value) setDate(new Date(e.target.value));
                                 }}
@@ -198,8 +198,8 @@ export default function NhapLieuScreen() {
                     </View>
                 </View>
 
-                <TouchableOpacity 
-                    style={[styles.saveButton, isSaving && styles.saveButtonDisabled]} 
+                <TouchableOpacity
+                    style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
                     onPress={handleSave}
                     disabled={isSaving}
                 >
