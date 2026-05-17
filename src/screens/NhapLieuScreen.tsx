@@ -1,70 +1,101 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Platform, Alert, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Platform, Alert, ActivityIndicator, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fetchUserData, saveUserData } from '../utils/blobStorage';
+
+interface CongDoan {
+    maCongDoan: string;
+    dinhMuc: number;
+}
 
 export default function NhapLieuScreen() {
+    const [user, setUser] = useState<any>(null);
     const [date, setDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
-    const [maCongDoan, setMaCongDoan] = useState('CD001');
+    
+    // User Data State
+    const [danhSachCongDoan, setDanhSachCongDoan] = useState<CongDoan[]>([]);
+    const [maCongDoan, setMaCongDoan] = useState('');
     const [soLuong, setSoLuong] = useState('');
+    
     const [isSaving, setIsSaving] = useState(false);
+    const [isLoadingData, setIsLoadingData] = useState(true);
+    const [fullData, setFullData] = useState<any>(null);
 
-    const [danhSachCongDoan, setDanhSachCongDoan] = useState(['CD001', 'CD002', 'CD003']);
+    // Modal State
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [newMa, setNewMa] = useState('');
+    const [newDinhMuc, setNewDinhMuc] = useState('');
 
-    const handleAddCongDoan = () => {
-        if (Platform.OS === 'web') {
-            const newCode = window.prompt('Nhập mã công đoạn mới:');
-            if (newCode) {
-                setDanhSachCongDoan([...danhSachCongDoan, newCode]);
-                setMaCongDoan(newCode);
-            }
-        } else if (Platform.OS === 'ios') {
-            Alert.prompt(
-                'Thêm mã công đoạn',
-                'Nhập mã công đoạn mới:',
-                [
-                    { text: 'Hủy', style: 'cancel' },
-                    {
-                        text: 'Thêm',
-                        onPress: (newCode) => {
-                            if (newCode) {
-                                setDanhSachCongDoan([...danhSachCongDoan, newCode]);
-                                setMaCongDoan(newCode);
-                            }
+    useEffect(() => {
+        loadUserData();
+    }, []);
+
+    const loadUserData = async () => {
+        setIsLoadingData(true);
+        try {
+            const userDataString = await AsyncStorage.getItem('user');
+            if (userDataString) {
+                const u = JSON.parse(userDataString);
+                setUser(u);
+                
+                const data = await fetchUserData(u.phone);
+                if (data) {
+                    setFullData(data);
+                    if (data.congDoan) {
+                        setDanhSachCongDoan(data.congDoan);
+                        if (data.congDoan.length > 0) {
+                            setMaCongDoan(data.congDoan[0].maCongDoan);
                         }
                     }
-                ],
-                'plain-text'
-            );
-        } else {
-            const newCode = `CD00${danhSachCongDoan.length + 1}`;
-            setDanhSachCongDoan([...danhSachCongDoan, newCode]);
-            setMaCongDoan(newCode);
-            Alert.alert('Thông báo', `Đã thêm mã tự động: ${newCode}`);
+                } else {
+                    // Initialize empty data
+                    const initialData = { congDoan: [], sanLuong: {} };
+                    setFullData(initialData);
+                }
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoadingData(false);
         }
     };
 
-    const uploadToBlob = async (filename: string, data: string, token: string) => {
-        const response = await fetch(`https://blob.vercel-storage.com/${filename}`, {
-            method: 'PUT',
-            headers: {
-                'authorization': `Bearer ${token}`,
-                'x-api-version': '7',
-                'x-content-type': 'application/json',
-                'x-access': 'public',
-            },
-            body: data
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(errorText);
+    const handleSaveNewCongDoan = async () => {
+        if (!newMa || !newDinhMuc) {
+            Platform.OS === 'web' ? alert('Vui lòng nhập đủ thông tin') : Alert.alert('Lỗi', 'Vui lòng nhập đủ thông tin');
+            return;
         }
 
-        return await response.json();
+        const norm = Number(newDinhMuc);
+        if (isNaN(norm)) {
+            Platform.OS === 'web' ? alert('Định mức phải là số') : Alert.alert('Lỗi', 'Định mức phải là số');
+            return;
+        }
+
+        const newCd: CongDoan = { maCongDoan: newMa.trim(), dinhMuc: norm };
+        const updatedList = [...danhSachCongDoan, newCd];
+        setDanhSachCongDoan(updatedList);
+        setMaCongDoan(newCd.maCongDoan);
+        
+        // Update full data
+        const updatedData = { ...fullData, congDoan: updatedList };
+        setFullData(updatedData);
+
+        // Save immediately to Blob
+        try {
+            await saveUserData(user.phone, updatedData);
+        } catch (e) {
+            console.error("Save cong doan error:", e);
+        }
+
+        setShowAddModal(false);
+        setNewMa('');
+        setNewDinhMuc('');
     };
 
     const handleSave = async () => {
@@ -72,25 +103,27 @@ export default function NhapLieuScreen() {
             Platform.OS === 'web' ? alert('Vui lòng nhập số lượng') : Alert.alert('Lỗi', 'Vui lòng nhập số lượng');
             return;
         }
+        if (!maCongDoan) {
+            Platform.OS === 'web' ? alert('Vui lòng chọn hoặc thêm mã công đoạn') : Alert.alert('Lỗi', 'Vui lòng chọn hoặc thêm mã công đoạn');
+            return;
+        }
 
         setIsSaving(true);
         try {
-            const data = {
-                ngay: date.toISOString().split('T')[0],
+            const dateStr = date.toISOString().split('T')[0];
+            const updatedData = { ...fullData };
+            
+            if (!updatedData.sanLuong) updatedData.sanLuong = {};
+            if (!updatedData.sanLuong[dateStr]) updatedData.sanLuong[dateStr] = [];
+
+            updatedData.sanLuong[dateStr].push({
                 maCongDoan,
                 soLuong: Number(soLuong),
                 timestamp: new Date().toISOString()
-            };
+            });
 
-            const filename = `data/${Date.now()}.json`;
-            // Vercel Blob Token: Need to set this in Vercel project environment variables (EXPO_PUBLIC_BLOB_READ_WRITE_TOKEN)
-            const token = process.env.EXPO_PUBLIC_BLOB_READ_WRITE_TOKEN;
-
-            if (!token) {
-                throw new Error('Chưa cấu hình EXPO_PUBLIC_BLOB_READ_WRITE_TOKEN');
-            }
-
-            await uploadToBlob(filename, JSON.stringify(data), token);
+            await saveUserData(user.phone, updatedData);
+            setFullData(updatedData);
 
             if (Platform.OS === 'web') {
                 alert('Lưu thành công!');
@@ -117,6 +150,16 @@ export default function NhapLieuScreen() {
         return `${day}/${month}/${year}`;
     };
 
+    const selectedCongDoanData = danhSachCongDoan.find(c => c.maCongDoan === maCongDoan);
+
+    if (isLoadingData) {
+        return (
+            <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color="#007AFF" />
+            </SafeAreaView>
+        );
+    }
+
     return (
         <SafeAreaView style={styles.safeArea} edges={['top']}>
             <View style={styles.header}>
@@ -128,9 +171,9 @@ export default function NhapLieuScreen() {
                     <View style={styles.row}>
                         <Text style={styles.label}>Ngày</Text>
                         {Platform.OS === 'web' ? (
-                            <input
-                                type="date"
-                                value={date.toISOString().split('T')[0]}
+                            <input 
+                                type="date" 
+                                value={date.toISOString().split('T')[0]} 
                                 onChange={(e) => {
                                     if (e.target.value) setDate(new Date(e.target.value));
                                 }}
@@ -163,21 +206,36 @@ export default function NhapLieuScreen() {
                         <Text style={styles.label}>Công đoạn</Text>
                         <View style={styles.valueContainer}>
                             <View style={styles.pickerWrapper}>
-                                <Picker
-                                    selectedValue={maCongDoan}
-                                    onValueChange={(itemValue) => setMaCongDoan(itemValue)}
-                                    style={styles.picker}
-                                >
-                                    {danhSachCongDoan.map((cd) => (
-                                        <Picker.Item key={cd} label={cd} value={cd} />
-                                    ))}
-                                </Picker>
+                                {danhSachCongDoan.length > 0 ? (
+                                    <Picker
+                                        selectedValue={maCongDoan}
+                                        onValueChange={(itemValue) => setMaCongDoan(itemValue)}
+                                        style={styles.picker}
+                                    >
+                                        {danhSachCongDoan.map((cd) => (
+                                            <Picker.Item key={cd.maCongDoan} label={cd.maCongDoan} value={cd.maCongDoan} />
+                                        ))}
+                                    </Picker>
+                                ) : (
+                                    <Text style={{ color: '#8E8E93', marginRight: 8, fontSize: 17 }}>Chưa có mã</Text>
+                                )}
                             </View>
-                            <TouchableOpacity onPress={handleAddCongDoan} style={styles.iconButton}>
+                            <TouchableOpacity onPress={() => setShowAddModal(true)} style={styles.iconButton}>
                                 <Ionicons name="add-circle" size={22} color="#007AFF" />
                             </TouchableOpacity>
                         </View>
                     </View>
+                    
+                    {/* Hiển thị định mức */}
+                    {selectedCongDoanData && (
+                        <>
+                            <View style={styles.divider} />
+                            <View style={styles.row}>
+                                <Text style={styles.label}>Định mức</Text>
+                                <Text style={styles.infoText}>{selectedCongDoanData.dinhMuc}</Text>
+                            </View>
+                        </>
+                    )}
 
                     <View style={styles.divider} />
 
@@ -196,10 +254,10 @@ export default function NhapLieuScreen() {
                     </View>
                 </View>
 
-                <TouchableOpacity
-                    style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+                <TouchableOpacity 
+                    style={[styles.saveButton, (isSaving || danhSachCongDoan.length === 0) && styles.saveButtonDisabled]} 
                     onPress={handleSave}
-                    disabled={isSaving}
+                    disabled={isSaving || danhSachCongDoan.length === 0}
                 >
                     {isSaving ? (
                         <ActivityIndicator color="#fff" />
@@ -208,6 +266,42 @@ export default function NhapLieuScreen() {
                     )}
                 </TouchableOpacity>
             </ScrollView>
+
+            {/* Modal Thêm Công Đoạn */}
+            <Modal visible={showAddModal} transparent={true} animationType="fade">
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Thêm công đoạn</Text>
+                        <View style={styles.modalInputGroup}>
+                            <Text style={styles.modalLabel}>Mã công đoạn</Text>
+                            <TextInput
+                                style={styles.modalInput}
+                                placeholder="VD: CD001"
+                                value={newMa}
+                                onChangeText={setNewMa}
+                            />
+                        </View>
+                        <View style={styles.modalInputGroup}>
+                            <Text style={styles.modalLabel}>Định mức</Text>
+                            <TextInput
+                                style={styles.modalInput}
+                                placeholder="VD: 1000"
+                                value={newDinhMuc}
+                                onChangeText={setNewDinhMuc}
+                                keyboardType="numeric"
+                            />
+                        </View>
+                        <View style={styles.modalActions}>
+                            <TouchableOpacity style={styles.modalBtnCancel} onPress={() => setShowAddModal(false)}>
+                                <Text style={styles.modalBtnTextCancel}>Hủy</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.modalBtnSave} onPress={handleSaveNewCongDoan}>
+                                <Text style={styles.modalBtnTextSave}>Thêm</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -274,7 +368,7 @@ const styles = StyleSheet.create({
         padding: 4,
     },
     pickerWrapper: {
-        width: 120,
+        width: 130,
         ...(Platform.OS === 'web' && {
             borderWidth: 0,
         }),
@@ -290,6 +384,10 @@ const styles = StyleSheet.create({
             outline: 'none',
             appearance: 'none',
         }),
+    },
+    infoText: {
+        fontSize: 17,
+        color: '#8E8E93',
     },
     input: {
         flex: 1,
@@ -315,4 +413,68 @@ const styles = StyleSheet.create({
         fontSize: 17,
         fontWeight: '600',
     },
+    
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        borderRadius: 14,
+        width: '100%',
+        maxWidth: 340,
+        padding: 20,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '600',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    modalInputGroup: {
+        marginBottom: 16,
+    },
+    modalLabel: {
+        fontSize: 15,
+        color: '#333',
+        marginBottom: 8,
+    },
+    modalInput: {
+        borderWidth: 1,
+        borderColor: '#E5E5EA',
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 16,
+        backgroundColor: '#FAFAFA',
+    },
+    modalActions: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginTop: 10,
+    },
+    modalBtnCancel: {
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        marginRight: 8,
+    },
+    modalBtnTextCancel: {
+        fontSize: 16,
+        color: '#FF3B30',
+        fontWeight: '500',
+    },
+    modalBtnSave: {
+        backgroundColor: '#007AFF',
+        borderRadius: 8,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+    },
+    modalBtnTextSave: {
+        fontSize: 16,
+        color: '#FFF',
+        fontWeight: '600',
+    }
 });
