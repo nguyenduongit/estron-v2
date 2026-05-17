@@ -1,4 +1,4 @@
-const CACHE_NAME = 'estron-v1';
+const CACHE_NAME = 'estron-v2';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
