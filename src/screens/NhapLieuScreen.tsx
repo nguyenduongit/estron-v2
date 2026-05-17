@@ -84,15 +84,13 @@ export default function NhapLieuScreen() {
 
             const filename = `data/${Date.now()}.json`;
             // Vercel Blob Token: Need to set this in Vercel project environment variables (EXPO_PUBLIC_BLOB_READ_WRITE_TOKEN)
-            const token = process.env.BLOB_READ_WRITE_TOKEN;
+            const token = process.env.EXPO_PUBLIC_BLOB_READ_WRITE_TOKEN;
 
-            if (token) {
-                await uploadToBlob(filename, JSON.stringify(data), token);
-            } else {
-                console.warn('Vui lòng cấu hình EXPO_PUBLIC_BLOB_READ_WRITE_TOKEN trong file .env');
-                // Simulate network request if token is missing
-                await new Promise(resolve => setTimeout(resolve, 1000));
+            if (!token) {
+                throw new Error('Chưa cấu hình EXPO_PUBLIC_BLOB_READ_WRITE_TOKEN');
             }
+
+            await uploadToBlob(filename, JSON.stringify(data), token);
 
             if (Platform.OS === 'web') {
                 alert('Lưu thành công!');
