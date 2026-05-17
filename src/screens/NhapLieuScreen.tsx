@@ -21,8 +21,8 @@ export default function NhapLieuScreen() {
     const [danhSachCongDoan, setDanhSachCongDoan] = useState<CongDoan[]>([]);
     const [maCongDoan, setMaCongDoan] = useState('');
     const [soLuong, setSoLuong] = useState('');
-    const [thoiGianThucHien, setThoiGianThucHien] = useState('');
-    const [thoiGianHoTro, setThoiGianHoTro] = useState('');
+    const [thoiGianThucHien, setThoiGianThucHien] = useState('480');
+    const [thoiGianHoTro, setThoiGianHoTro] = useState('0');
 
     const [isSaving, setIsSaving] = useState(false);
     const [isLoadingData, setIsLoadingData] = useState(true);
@@ -42,15 +42,15 @@ export default function NhapLieuScreen() {
             const dateStr = date.toISOString().split('T')[0];
             const dataForDate = fullData.nangSuat[dateStr];
             if (dataForDate) {
-                setThoiGianThucHien(dataForDate.thoiGianThucHien ? dataForDate.thoiGianThucHien.toString() : '');
-                setThoiGianHoTro(dataForDate.thoiGianHoTro ? dataForDate.thoiGianHoTro.toString() : '');
+                setThoiGianThucHien(dataForDate.thoiGianThucHien !== undefined ? dataForDate.thoiGianThucHien.toString() : '480');
+                setThoiGianHoTro(dataForDate.thoiGianHoTro !== undefined ? dataForDate.thoiGianHoTro.toString() : '0');
             } else {
-                setThoiGianThucHien('');
-                setThoiGianHoTro('');
+                setThoiGianThucHien('480');
+                setThoiGianHoTro('0');
             }
         } else {
-            setThoiGianThucHien('');
-            setThoiGianHoTro('');
+            setThoiGianThucHien('480');
+            setThoiGianHoTro('0');
         }
     }, [date, fullData]);
 
@@ -149,13 +149,13 @@ export default function NhapLieuScreen() {
 
             if (!updatedData.nangSuat[dateStr]) {
                 updatedData.nangSuat[dateStr] = {
-                    thoiGianThucHien: Number(thoiGianThucHien) || 0,
-                    thoiGianHoTro: Number(thoiGianHoTro) || 0,
+                    thoiGianThucHien: thoiGianThucHien === '' ? 480 : Number(thoiGianThucHien),
+                    thoiGianHoTro: thoiGianHoTro === '' ? 0 : Number(thoiGianHoTro),
                     sanLuong: []
                 };
             } else {
-                updatedData.nangSuat[dateStr].thoiGianThucHien = Number(thoiGianThucHien) || 0;
-                updatedData.nangSuat[dateStr].thoiGianHoTro = Number(thoiGianHoTro) || 0;
+                updatedData.nangSuat[dateStr].thoiGianThucHien = thoiGianThucHien === '' ? 480 : Number(thoiGianThucHien);
+                updatedData.nangSuat[dateStr].thoiGianHoTro = thoiGianHoTro === '' ? 0 : Number(thoiGianHoTro);
             }
 
             updatedData.nangSuat[dateStr].sanLuong.push({
