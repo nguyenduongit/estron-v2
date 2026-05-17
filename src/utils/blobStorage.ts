@@ -8,34 +8,21 @@ export const getBlobToken = () => {
 
 export const fetchUsers = async () => {
     const token = getBlobToken();
-    const filename = 'users/users.json';
+    if (!token) return [];
+    
+    const storeId = token.split('_')[3];
+    const newUrl = `https://${storeId}.public.blob.vercel-storage.com/users/users.json?t=${Date.now()}`;
+    const oldUrl = `https://${storeId}.public.blob.vercel-storage.com/users.json?t=${Date.now()}`;
+    
     try {
-        const listRes = await fetch(`https://blob.vercel-storage.com/?prefix=${filename}&t=${Date.now()}`, {
-            headers: {
-                'authorization': `Bearer ${token}`,
-                'x-api-version': '7'
-            },
-            cache: 'no-store'
-        });
+        let res = await fetch(newUrl, { cache: 'no-store' });
+        if (!res.ok) {
+            // Fallback to old path
+            res = await fetch(oldUrl, { cache: 'no-store' });
+            if (!res.ok) return [];
+        }
         
-        if (!listRes.ok) {
-            console.error("List users.json failed:", await listRes.text());
-            return [];
-        }
-
-        const data = await listRes.json();
-        const userBlob = data.blobs.find((b: any) => b.pathname === filename);
-
-        if (!userBlob) {
-            return [];
-        }
-
-        const contentRes = await fetch(`${userBlob.url}?t=${Date.now()}`, { cache: 'no-store' });
-        if (!contentRes.ok) {
-            return [];
-        }
-
-        const users = await contentRes.json();
+        const users = await res.json();
         return Array.isArray(users) ? users : [];
     } catch (error) {
         console.error("fetchUsers error:", error);
@@ -68,28 +55,21 @@ export const saveUsers = async (users: any[]) => {
 
 export const fetchUserData = async (phone: string) => {
     const token = getBlobToken();
-    const filename = `data/user_data_${phone}.json`;
+    if (!token) return null;
+    
+    const storeId = token.split('_')[3];
+    const newUrl = `https://${storeId}.public.blob.vercel-storage.com/data/user_data_${phone}.json?t=${Date.now()}`;
+    const oldUrl = `https://${storeId}.public.blob.vercel-storage.com/user_data_${phone}.json?t=${Date.now()}`;
     
     try {
-        const listRes = await fetch(`https://blob.vercel-storage.com/?prefix=${filename}&t=${Date.now()}`, {
-            headers: {
-                'authorization': `Bearer ${token}`,
-                'x-api-version': '7'
-            },
-            cache: 'no-store'
-        });
-        
-        if (!listRes.ok) return null;
+        let res = await fetch(newUrl, { cache: 'no-store' });
+        if (!res.ok) {
+            // Fallback to old path
+            res = await fetch(oldUrl, { cache: 'no-store' });
+            if (!res.ok) return null;
+        }
 
-        const data = await listRes.json();
-        const userBlob = data.blobs.find((b: any) => b.pathname === filename);
-
-        if (!userBlob) return null;
-
-        const contentRes = await fetch(`${userBlob.url}?t=${Date.now()}`, { cache: 'no-store' });
-        if (!contentRes.ok) return null;
-
-        return await contentRes.json();
+        return await res.json();
     } catch (error) {
         console.error("fetchUserData error:", error);
         return null;
