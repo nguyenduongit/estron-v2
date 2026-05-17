@@ -78,6 +78,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                                 <TextInput
                                     style={styles.input}
                                     placeholder="Nguyễn Văn A"
+                                    placeholderTextColor="#C7C7CC"
                                     value={name}
                                     onChangeText={setName}
                                     autoCapitalize="words"
@@ -92,6 +93,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                         <TextInput
                             style={styles.input}
                             placeholder="09xxxxxxxx"
+                            placeholderTextColor="#C7C7CC"
                             value={phone}
                             onChangeText={setPhone}
                             keyboardType="phone-pad"
