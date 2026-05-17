@@ -101,16 +101,16 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                     </View>
                 </View>
 
-                <TouchableOpacity 
-                    style={[styles.primaryButton, isLoading && styles.disabledButton]} 
+                <TouchableOpacity
+                    style={[styles.primaryButton, isLoading && styles.disabledButton]}
                     onPress={handleAuth}
                     disabled={isLoading}
                 >
                     {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryButtonText}>{isLoginMode ? 'Đăng Nhập' : 'Đăng Ký'}</Text>}
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                    style={styles.switchButton} 
+                <TouchableOpacity
+                    style={styles.switchButton}
                     onPress={() => setIsLoginMode(!isLoginMode)}
                     disabled={isLoading}
                 >
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
         minHeight: 50,
     },
     label: {
-        width: 100,
+        width: 120,
         fontSize: 17,
         fontWeight: '500',
         color: '#000',
