@@ -219,7 +219,7 @@ export default function NhapLieuScreen() {
                                 onChange={(e) => {
                                     if (e.target.value) setDate(new Date(e.target.value));
                                 }}
-                                style={{ border: 'none', background: 'transparent', fontSize: 17, color: '#007AFF', textAlign: 'right', outline: 'none' }}
+                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 17, color: '#007AFF', textAlign: 'right', outline: 'none', padding: 0, margin: 0, minWidth: 0, direction: 'rtl' }}
                             />
                         ) : (
                             <TouchableOpacity style={styles.valueContainer} onPress={() => setShowDatePicker(true)}>
