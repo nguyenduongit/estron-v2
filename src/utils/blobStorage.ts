@@ -14,7 +14,8 @@ export const fetchUsers = async () => {
             headers: {
                 'authorization': `Bearer ${token}`,
                 'x-api-version': '7'
-            }
+            },
+            cache: 'no-store'
         });
         
         if (!listRes.ok) {
@@ -29,7 +30,7 @@ export const fetchUsers = async () => {
             return [];
         }
 
-        const contentRes = await fetch(userBlob.url);
+        const contentRes = await fetch(`${userBlob.url}?t=${Date.now()}`, { cache: 'no-store' });
         if (!contentRes.ok) {
             return [];
         }
@@ -74,7 +75,8 @@ export const fetchUserData = async (phone: string) => {
             headers: {
                 'authorization': `Bearer ${token}`,
                 'x-api-version': '7'
-            }
+            },
+            cache: 'no-store'
         });
         
         if (!listRes.ok) return null;
@@ -84,7 +86,7 @@ export const fetchUserData = async (phone: string) => {
 
         if (!userBlob) return null;
 
-        const contentRes = await fetch(userBlob.url);
+        const contentRes = await fetch(`${userBlob.url}?t=${Date.now()}`, { cache: 'no-store' });
         if (!contentRes.ok) return null;
 
         return await contentRes.json();

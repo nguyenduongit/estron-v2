@@ -16,14 +16,14 @@ export default function NhapLieuScreen() {
     const [user, setUser] = useState<any>(null);
     const [date, setDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
-    
+
     // User Data State
     const [danhSachCongDoan, setDanhSachCongDoan] = useState<CongDoan[]>([]);
     const [maCongDoan, setMaCongDoan] = useState('');
     const [soLuong, setSoLuong] = useState('');
     const [thoiGianThucHien, setThoiGianThucHien] = useState('');
     const [thoiGianHoTro, setThoiGianHoTro] = useState('');
-    
+
     const [isSaving, setIsSaving] = useState(false);
     const [isLoadingData, setIsLoadingData] = useState(true);
     const [fullData, setFullData] = useState<any>(null);
@@ -61,7 +61,7 @@ export default function NhapLieuScreen() {
             if (userDataString) {
                 const u = JSON.parse(userDataString);
                 setUser(u);
-                
+
                 const data = await fetchUserData(u.phone);
                 if (data) {
                     if (data.sanLuong && !data.nangSuat) {
@@ -113,7 +113,7 @@ export default function NhapLieuScreen() {
         const updatedList = [...danhSachCongDoan, newCd];
         setDanhSachCongDoan(updatedList);
         setMaCongDoan(newCd.maCongDoan);
-        
+
         // Update full data
         const updatedData = { ...fullData, congDoan: updatedList };
         setFullData(updatedData);
@@ -144,9 +144,9 @@ export default function NhapLieuScreen() {
         try {
             const dateStr = date.toISOString().split('T')[0];
             const updatedData = { ...fullData };
-            
+
             if (!updatedData.nangSuat) updatedData.nangSuat = {};
-            
+
             if (!updatedData.nangSuat[dateStr]) {
                 updatedData.nangSuat[dateStr] = {
                     thoiGianThucHien: Number(thoiGianThucHien) || 0,
@@ -213,9 +213,9 @@ export default function NhapLieuScreen() {
                     <View style={styles.row}>
                         <Text style={styles.label}>Ngày</Text>
                         {Platform.OS === 'web' ? (
-                            <input 
-                                type="date" 
-                                value={date.toISOString().split('T')[0]} 
+                            <input
+                                type="date"
+                                value={date.toISOString().split('T')[0]}
                                 onChange={(e) => {
                                     if (e.target.value) setDate(new Date(e.target.value));
                                 }}
@@ -267,7 +267,7 @@ export default function NhapLieuScreen() {
                             </TouchableOpacity>
                         </View>
                     </View>
-                    
+
                     {/* Hiển thị định mức */}
                     {selectedCongDoanData && (
                         <>
@@ -278,38 +278,6 @@ export default function NhapLieuScreen() {
                             </View>
                         </>
                     )}
-
-                    <View style={styles.divider} />
-
-                    {/* Thời gian thực hiện */}
-                    <View style={styles.row}>
-                        <Text style={styles.label}>TG thực hiện (phút)</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={thoiGianThucHien}
-                            onChangeText={setThoiGianThucHien}
-                            placeholder="Nhập phút"
-                            placeholderTextColor="#C7C7CC"
-                            keyboardType="numeric"
-                            returnKeyType="done"
-                        />
-                    </View>
-
-                    <View style={styles.divider} />
-
-                    {/* Thời gian hỗ trợ */}
-                    <View style={styles.row}>
-                        <Text style={styles.label}>TG hỗ trợ (phút)</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={thoiGianHoTro}
-                            onChangeText={setThoiGianHoTro}
-                            placeholder="Nhập phút"
-                            placeholderTextColor="#C7C7CC"
-                            keyboardType="numeric"
-                            returnKeyType="done"
-                        />
-                    </View>
 
                     <View style={styles.divider} />
 
@@ -326,10 +294,42 @@ export default function NhapLieuScreen() {
                             returnKeyType="done"
                         />
                     </View>
+
+                    {/* Thời gian thực hiện */}
+                    <View style={styles.row}>
+                        <Text style={styles.label}>Thời gian thực hiện</Text>
+                        <TextInput
+                            style={styles.input}
+                            value={thoiGianThucHien}
+                            onChangeText={setThoiGianThucHien}
+                            placeholder="Nhập phút"
+                            placeholderTextColor="#C7C7CC"
+                            keyboardType="numeric"
+                            returnKeyType="done"
+                        />
+                    </View>
+
+                    <View style={styles.divider} />
+
+                    {/* Thời gian hỗ trợ */}
+                    <View style={styles.row}>
+                        <Text style={styles.label}>Thời gian hỗ trợ</Text>
+                        <TextInput
+                            style={styles.input}
+                            value={thoiGianHoTro}
+                            onChangeText={setThoiGianHoTro}
+                            placeholder="Nhập phút"
+                            placeholderTextColor="#C7C7CC"
+                            keyboardType="numeric"
+                            returnKeyType="done"
+                        />
+                    </View>
+
+                    <View style={styles.divider} />
                 </View>
 
-                <TouchableOpacity 
-                    style={[styles.saveButton, (isSaving || danhSachCongDoan.length === 0) && styles.saveButtonDisabled]} 
+                <TouchableOpacity
+                    style={[styles.saveButton, (isSaving || danhSachCongDoan.length === 0) && styles.saveButtonDisabled]}
                     onPress={handleSave}
                     disabled={isSaving || danhSachCongDoan.length === 0}
                 >
@@ -350,7 +350,7 @@ export default function NhapLieuScreen() {
                             <Text style={styles.modalLabel}>Mã công đoạn</Text>
                             <TextInput
                                 style={styles.modalInput}
-                                placeholder="VD: CD001"
+                                placeholder="Ví dụ: 5.2"
                                 value={newMa}
                                 onChangeText={setNewMa}
                             />
@@ -359,7 +359,7 @@ export default function NhapLieuScreen() {
                             <Text style={styles.modalLabel}>Định mức</Text>
                             <TextInput
                                 style={styles.modalInput}
-                                placeholder="VD: 1000"
+                                placeholder="Ví dụ: 1135"
                                 value={newDinhMuc}
                                 onChangeText={setNewDinhMuc}
                                 keyboardType="numeric"
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
         fontSize: 17,
         fontWeight: '600',
     },
-    
+
     // Modal Styles
     modalOverlay: {
         flex: 1,
