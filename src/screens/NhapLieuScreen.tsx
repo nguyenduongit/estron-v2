@@ -421,7 +421,8 @@ const styles = StyleSheet.create({
         marginLeft: 16,
     },
     label: {
-        width: 165,
+        width: 155,
+        flexShrink: 0,
         fontSize: 17,
         color: '#000000',
         fontWeight: '400',
@@ -458,6 +459,7 @@ const styles = StyleSheet.create({
             backgroundColor: 'transparent',
             fontSize: 17,
             textAlign: 'right',
+            direction: 'rtl',
             outline: 'none',
             appearance: 'none',
         }),
