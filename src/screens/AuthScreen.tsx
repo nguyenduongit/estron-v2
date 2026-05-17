@@ -28,7 +28,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
         setIsLoading(true);
         try {
             const users = await fetchUsers();
-            const existingUser = users.find((u: any) => u.phone === phone);
+            const existingUser = users.find((u: any) => u.phone === phone.trim());
 
             if (isLoginMode) {
                 if (existingUser) {

@@ -10,7 +10,7 @@ export const fetchUsers = async () => {
     const token = getBlobToken();
     const filename = 'users/users.json';
     try {
-        const listRes = await fetch(`https://blob.vercel-storage.com/?prefix=${filename}`, {
+        const listRes = await fetch(`https://blob.vercel-storage.com/?prefix=${filename}&t=${Date.now()}`, {
             headers: {
                 'authorization': `Bearer ${token}`,
                 'x-api-version': '7'
@@ -71,7 +71,7 @@ export const fetchUserData = async (phone: string) => {
     const filename = `data/user_data_${phone}.json`;
     
     try {
-        const listRes = await fetch(`https://blob.vercel-storage.com/?prefix=${filename}`, {
+        const listRes = await fetch(`https://blob.vercel-storage.com/?prefix=${filename}&t=${Date.now()}`, {
             headers: {
                 'authorization': `Bearer ${token}`,
                 'x-api-version': '7'
