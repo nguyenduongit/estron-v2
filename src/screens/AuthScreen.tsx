@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
         minHeight: 50,
     },
     label: {
-        width: 120,
+        width: 140,
         fontSize: 17,
         fontWeight: '500',
         color: '#000',

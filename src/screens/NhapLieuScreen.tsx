@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
         marginLeft: 16,
     },
     label: {
-        width: 120,
+        width: 140,
         fontSize: 17,
         color: '#000000',
         fontWeight: '400',
