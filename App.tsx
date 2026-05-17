@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, DeviceEventEmitter } from 'react-native';
 
 import TabNavigator from './src/navigation/TabNavigator';
 import AuthScreen from './src/screens/AuthScreen';
@@ -26,6 +26,15 @@ export default function App() {
       }
     };
     checkLoginStatus();
+
+    const logoutSub = DeviceEventEmitter.addListener('onLogout', async () => {
+      await AsyncStorage.removeItem('user');
+      setUser(null);
+    });
+
+    return () => {
+      logoutSub.remove();
+    };
   }, []);
 
   const handleAuthSuccess = (userData: any) => {
