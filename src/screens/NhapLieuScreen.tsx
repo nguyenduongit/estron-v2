@@ -432,6 +432,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'flex-end',
+        minWidth: 0,
     },
     dateText: {
         fontSize: 17,
@@ -447,6 +448,7 @@ const styles = StyleSheet.create({
     },
     pickerWrapper: {
         flex: 1,
+        minWidth: 0,
         ...(Platform.OS === 'web' && {
             borderWidth: 0,
         }),
@@ -469,13 +471,15 @@ const styles = StyleSheet.create({
         fontSize: 17,
         color: '#8E8E93',
         textAlign: 'right',
+        minWidth: 0,
     },
     input: {
         flex: 1,
         fontSize: 17,
         color: '#007AFF',
         textAlign: 'right',
-        marginLeft: 16,
+        marginLeft: 8,
+        minWidth: 0,
     },
     saveButton: {
         backgroundColor: '#007AFF',
