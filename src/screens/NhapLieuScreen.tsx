@@ -196,17 +196,22 @@ export default function NhapLieuScreen() {
 
     if (isLoadingData) {
         return (
-            <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
-                <ActivityIndicator size="large" color="#007AFF" />
-            </SafeAreaView>
+            <View style={styles.screenContainer}>
+                <SafeAreaView style={styles.safeArea} edges={['top']} />
+                <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                    <ActivityIndicator size="large" color="#007AFF" />
+                </View>
+            </View>
         );
     }
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Nhập liệu</Text>
-            </View>
+        <View style={styles.screenContainer}>
+            <SafeAreaView style={styles.safeArea} edges={['top']}>
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle}>Nhập liệu</Text>
+                </View>
+            </SafeAreaView>
             <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
                 <View style={styles.formGroup}>
                     {/* Ngày tháng */}
@@ -393,13 +398,16 @@ export default function NhapLieuScreen() {
                     </View>
                 </View>
             </Modal>
-        </SafeAreaView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
+    screenContainer: {
         flex: 1,
+        backgroundColor: '#F2F2F7',
+    },
+    safeArea: {
         backgroundColor: '#007AFF',
     },
     header: {

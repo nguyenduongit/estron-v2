@@ -37,10 +37,12 @@ export default function CaiDatScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Cài đặt</Text>
-            </View>
+        <View style={styles.screenContainer}>
+            <SafeAreaView style={styles.safeArea} edges={['top']}>
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle}>Cài đặt</Text>
+                </View>
+            </SafeAreaView>
             <View style={styles.container}>
                 <View style={styles.userInfoGroup}>
                     <View style={styles.row}>
@@ -58,13 +60,16 @@ export default function CaiDatScreen() {
                     <Text style={styles.logoutText}>Đăng xuất</Text>
                 </TouchableOpacity>
             </View>
-        </SafeAreaView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
+    screenContainer: {
         flex: 1,
+        backgroundColor: '#F2F2F7',
+    },
+    safeArea: {
         backgroundColor: '#007AFF',
     },
     header: {

@@ -3,19 +3,24 @@ import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 export default function CongTuanScreen() {
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Công tuần</Text>
-            </View>
+        <View style={styles.screenContainer}>
+            <SafeAreaView style={styles.safeArea} edges={['top']}>
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle}>Công tuần</Text>
+                </View>
+            </SafeAreaView>
             <View style={styles.container}>
                 <Text style={styles.placeholder}>Màn hình Công tuần</Text>
             </View>
-        </SafeAreaView>
+        </View>
     );
 }
 const styles = StyleSheet.create({
-    safeArea: {
+    screenContainer: {
         flex: 1,
+        backgroundColor: '#F2F2F7',
+    },
+    safeArea: {
         backgroundColor: '#007AFF',
     },
     header: {

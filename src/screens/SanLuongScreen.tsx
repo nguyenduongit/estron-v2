@@ -94,10 +94,12 @@ export default function SanLuongScreen() {
     );
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Sản lượng</Text>
-            </View>
+        <View style={styles.screenContainer}>
+            <SafeAreaView style={styles.safeArea} edges={['top']}>
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle}>Sản lượng</Text>
+                </View>
+            </SafeAreaView>
             
             <View style={styles.mainContent}>
                 {loading ? (
@@ -146,13 +148,16 @@ export default function SanLuongScreen() {
                     </ScrollView>
                 )}
             </View>
-        </SafeAreaView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
+    screenContainer: {
         flex: 1,
+        backgroundColor: '#F2F2F7',
+    },
+    safeArea: {
         backgroundColor: '#007AFF',
     },
     mainContent: {
