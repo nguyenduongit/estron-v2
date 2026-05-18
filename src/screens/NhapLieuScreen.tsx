@@ -213,14 +213,17 @@ export default function NhapLieuScreen() {
                     <View style={styles.row}>
                         <Text style={styles.label}>Ngày</Text>
                         {Platform.OS === 'web' ? (
-                            <input
-                                type="date"
-                                value={date.toISOString().split('T')[0]}
-                                onChange={(e) => {
-                                    if (e.target.value) setDate(new Date(e.target.value));
-                                }}
-                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 17, color: '#007AFF', textAlign: 'right', outline: 'none', padding: 0, margin: 0, minWidth: 0, direction: 'rtl' }}
-                            />
+                            <View style={[styles.valueContainer, { position: 'relative' }]}>
+                                <Text style={styles.dateText}>{formatDate(date)}</Text>
+                                <input
+                                    type="date"
+                                    value={date.toISOString().split('T')[0]}
+                                    onChange={(e) => {
+                                        if (e.target.value) setDate(new Date(e.target.value));
+                                    }}
+                                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                                />
+                            </View>
                         ) : (
                             <TouchableOpacity style={styles.valueContainer} onPress={() => setShowDatePicker(true)}>
                                 <Text style={styles.dateText}>{formatDate(date)}</Text>
