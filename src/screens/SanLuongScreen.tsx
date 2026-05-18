@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchUserData } from '../utils/blobStorage';
 import { useFocusEffect } from '@react-navigation/native';
+import { getEstronMonthRange, getEstronDays } from '../utils/dateUtils';
 
 export default function SanLuongScreen() {
     const [loading, setLoading] = useState(true);
@@ -19,36 +20,38 @@ export default function SanLuongScreen() {
             if (!phone) return;
 
             const userData = await fetchUserData(phone);
-            if (userData && userData.nangSuat) {
-                // Sắp xếp ngày mới nhất lên đầu
-                const days = Object.keys(userData.nangSuat).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+            
+            // Tính toán tháng Estron hiện tại
+            const { startDate, endDate, estronMonth } = getEstronMonthRange();
+            const estronDays = getEstronDays(startDate, endDate);
+            
+            const nangSuat = userData?.nangSuat || {};
+            
+            const formattedData = estronDays.map(dateStr => {
+                const dayData = nangSuat[dateStr];
+                const sanLuong = dayData?.sanLuong || [];
                 
-                const formattedData = days.map(dateStr => {
-                    const dayData = userData.nangSuat[dateStr];
-                    const sanLuong = dayData.sanLuong || [];
-                    
-                    // Gom nhóm theo mã công đoạn và tính tổng số lượng
-                    const groupedMap: { [key: string]: number } = {};
-                    sanLuong.forEach((item: any) => {
-                        groupedMap[item.maCongDoan] = (groupedMap[item.maCongDoan] || 0) + item.soLuong;
-                    });
-                    
-                    const groupedArray = Object.keys(groupedMap).map(ma => ({
-                        maCongDoan: ma,
-                        totalSoLuong: groupedMap[ma]
-                    }));
-                    
-                    const dateObj = new Date(dateStr);
-                    const formattedDate = `Ngày ${dateObj.getDate()} thg ${dateObj.getMonth() + 1}, ${dateObj.getFullYear()}`;
-                    
-                    return {
-                        dateStr,
-                        formattedDate,
-                        items: groupedArray
-                    };
+                // Gom nhóm theo mã công đoạn và tính tổng số lượng
+                const groupedMap: { [key: string]: number } = {};
+                sanLuong.forEach((item: any) => {
+                    groupedMap[item.maCongDoan] = (groupedMap[item.maCongDoan] || 0) + item.soLuong;
                 });
-                setData(formattedData);
-            }
+                
+                const groupedArray = Object.keys(groupedMap).map(ma => ({
+                    maCongDoan: ma,
+                    totalSoLuong: groupedMap[ma]
+                }));
+                
+                const [yyyy, mm, dd] = dateStr.split('-').map(Number);
+                const formattedDate = `Ngày ${dd} thg ${mm}, ${yyyy}`;
+                
+                return {
+                    dateStr,
+                    formattedDate,
+                    items: groupedArray
+                };
+            });
+            setData(formattedData);
         } catch (error) {
             console.error("Lỗi khi tải dữ liệu sản lượng:", error);
         } finally {
@@ -97,7 +100,7 @@ export default function SanLuongScreen() {
                                     </View>
                                 ))}
                                 {day.items.length === 0 && (
-                                    <Text style={styles.emptyText}>Chưa có thông tin công đoạn</Text>
+                                    <Text style={styles.emptyText}>Không có sản lượng</Text>
                                 )}
                             </View>
                         </View>
