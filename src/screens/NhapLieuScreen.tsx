@@ -354,6 +354,7 @@ export default function NhapLieuScreen() {
                             <TextInput
                                 style={styles.modalInput}
                                 placeholder="Ví dụ: 5.2"
+                                placeholderTextColor="#C7C7CC"
                                 value={newMa}
                                 onChangeText={setNewMa}
                             />
@@ -363,6 +364,7 @@ export default function NhapLieuScreen() {
                             <TextInput
                                 style={styles.modalInput}
                                 placeholder="Ví dụ: 1135"
+                                placeholderTextColor="#C7C7CC"
                                 value={newDinhMuc}
                                 onChangeText={setNewDinhMuc}
                                 keyboardType="numeric"
