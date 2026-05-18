@@ -309,6 +309,12 @@ export default function NhapLieuScreen() {
                             placeholderTextColor="#C7C7CC"
                             keyboardType="numeric"
                             returnKeyType="done"
+                            onFocus={() => {
+                                if (thoiGianThucHien === '480') setThoiGianThucHien('');
+                            }}
+                            onBlur={() => {
+                                if (thoiGianThucHien.trim() === '') setThoiGianThucHien('480');
+                            }}
                         />
                     </View>
 
@@ -325,6 +331,12 @@ export default function NhapLieuScreen() {
                             placeholderTextColor="#C7C7CC"
                             keyboardType="numeric"
                             returnKeyType="done"
+                            onFocus={() => {
+                                if (thoiGianHoTro === '0') setThoiGianHoTro('');
+                            }}
+                            onBlur={() => {
+                                if (thoiGianHoTro.trim() === '') setThoiGianHoTro('0');
+                            }}
                         />
                     </View>
 
