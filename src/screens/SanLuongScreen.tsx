@@ -26,10 +26,18 @@ export default function SanLuongScreen() {
             const estronDays = getEstronDays(startDate, endDate);
             
             const nangSuat = userData?.nangSuat || {};
+            const congDoanList = userData?.congDoan || [];
+            const dinhMucMap: { [key: string]: number } = {};
+            congDoanList.forEach((cd: any) => {
+                dinhMucMap[cd.maCongDoan] = cd.dinhMuc;
+            });
             
             const formattedData = estronDays.map(dateStr => {
                 const dayData = nangSuat[dateStr];
                 const sanLuong = dayData?.sanLuong || [];
+                const hasData = dayData !== undefined;
+                const hoTro = hasData ? (Number(dayData.thoiGianHoTro) || 0) : 0;
+                const thucHien = hasData ? (Number(dayData.thoiGianThucHien) || 0) : 0;
                 
                 // Gom nhóm theo mã công đoạn và tính tổng số lượng
                 const groupedMap: { [key: string]: number } = {};
@@ -37,10 +45,27 @@ export default function SanLuongScreen() {
                     groupedMap[item.maCongDoan] = (groupedMap[item.maCongDoan] || 0) + item.soLuong;
                 });
                 
-                const groupedArray = Object.keys(groupedMap).map(ma => ({
-                    maCongDoan: ma,
-                    totalSoLuong: groupedMap[ma]
-                }));
+                let congSanPham = 0;
+                const groupedArray = Object.keys(groupedMap).map(ma => {
+                    const totalSoLuong = groupedMap[ma];
+                    const dinhMuc = dinhMucMap[ma] || 1; // tránh chia cho 0
+                    congSanPham += (totalSoLuong / dinhMuc);
+                    return {
+                        maCongDoan: ma,
+                        totalSoLuong
+                    };
+                });
+                
+                // Tính công trong ngày
+                const congTrongNgay = (hoTro / 480) + congSanPham;
+                const expectedCong = (thucHien + hoTro) / 480;
+                
+                let congColor = '#34C759'; // Xanh lá
+                if (expectedCong > congTrongNgay) {
+                    congColor = '#FF3B30'; // Đỏ
+                }
+                
+                const congTrongNgayDisplay = hasData ? congTrongNgay.toFixed(2) : null;
                 
                 const [yyyy, mm, dd] = dateStr.split('-').map(Number);
                 const formattedDate = `Ngày ${dd} thg ${mm}, ${yyyy}`;
@@ -49,7 +74,9 @@ export default function SanLuongScreen() {
                     dateStr,
                     formattedDate,
                     items: groupedArray,
-                    hoTro: dayData !== undefined ? dayData.thoiGianHoTro : undefined
+                    hoTro: hasData ? dayData.thoiGianHoTro : undefined,
+                    congTrongNgayDisplay,
+                    congColor
                 };
             });
             setData(formattedData);
@@ -86,6 +113,9 @@ export default function SanLuongScreen() {
                         <View key={day.dateStr} style={styles.card}>
                             <View style={styles.dateHeader}>
                                 <Text style={styles.dateText}>{day.formattedDate}</Text>
+                                {day.congTrongNgayDisplay !== null && (
+                                    <Text style={[styles.congText, { color: day.congColor }]}>{day.congTrongNgayDisplay}</Text>
+                                )}
                             </View>
                             <View style={styles.itemsContainer}>
                                 {day.items.map((item, index) => (
@@ -160,6 +190,9 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     dateHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         paddingHorizontal: 16,
         paddingVertical: 12,
         backgroundColor: '#F9F9F9',
@@ -170,6 +203,10 @@ const styles = StyleSheet.create({
         fontSize: 17,
         fontWeight: '600',
         color: '#000000',
+    },
+    congText: {
+        fontSize: 19,
+        fontWeight: '800',
     },
     itemsContainer: {
         paddingLeft: 16,
