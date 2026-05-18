@@ -99,51 +99,53 @@ export default function SanLuongScreen() {
                 <Text style={styles.headerTitle}>Sản lượng</Text>
             </View>
             
-            {loading ? (
-                <View style={styles.centerContainer}>
-                    <ActivityIndicator size="large" color="#007AFF" />
-                </View>
-            ) : data.length === 0 ? (
-                <View style={styles.centerContainer}>
-                    <Text style={styles.emptyMessage}>Chưa có dữ liệu sản lượng</Text>
-                </View>
-            ) : (
-                <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-                    {data.map(day => (
-                        <View key={day.dateStr} style={styles.card}>
-                            <View style={styles.dateHeader}>
-                                <Text style={styles.dateText}>{day.formattedDate}</Text>
-                                {day.congTrongNgayDisplay !== null && (
-                                    <Text style={[styles.congText, { color: day.congColor }]}>{day.congTrongNgayDisplay}</Text>
-                                )}
+            <View style={styles.mainContent}>
+                {loading ? (
+                    <View style={styles.centerContainer}>
+                        <ActivityIndicator size="large" color="#007AFF" />
+                    </View>
+                ) : data.length === 0 ? (
+                    <View style={styles.centerContainer}>
+                        <Text style={styles.emptyMessage}>Chưa có dữ liệu sản lượng</Text>
+                    </View>
+                ) : (
+                    <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+                        {data.map(day => (
+                            <View key={day.dateStr} style={styles.card}>
+                                <View style={styles.dateHeader}>
+                                    <Text style={styles.dateText}>{day.formattedDate}</Text>
+                                    {day.congTrongNgayDisplay !== null && (
+                                        <Text style={[styles.congText, { color: day.congColor }]}>{day.congTrongNgayDisplay}</Text>
+                                    )}
+                                </View>
+                                <View style={styles.itemsContainer}>
+                                    {day.items.map((item, index) => (
+                                        <View 
+                                            key={item.maCongDoan} 
+                                            style={[
+                                                styles.itemRow, 
+                                                index === day.items.length - 1 && (!day.hoTro || day.hoTro <= 0) && styles.itemRowLast
+                                            ]}
+                                        >
+                                            <Text style={styles.itemMa}>Công đoạn: {item.maCongDoan}</Text>
+                                            <Text style={styles.itemSoLuong}>{item.totalSoLuong}</Text>
+                                        </View>
+                                    ))}
+                                    {day.items.length === 0 && (
+                                        <Text style={styles.emptyText}>Không có sản lượng</Text>
+                                    )}
+                                    {day.hoTro !== undefined && Number(day.hoTro) > 0 && (
+                                        <View style={[styles.itemRow, styles.itemRowLast]}>
+                                            <Text style={styles.itemMa}>Hổ trợ</Text>
+                                            <Text style={styles.itemSoLuong}>{day.hoTro}</Text>
+                                        </View>
+                                    )}
+                                </View>
                             </View>
-                            <View style={styles.itemsContainer}>
-                                {day.items.map((item, index) => (
-                                    <View 
-                                        key={item.maCongDoan} 
-                                        style={[
-                                            styles.itemRow, 
-                                            index === day.items.length - 1 && (!day.hoTro || day.hoTro <= 0) && styles.itemRowLast
-                                        ]}
-                                    >
-                                        <Text style={styles.itemMa}>Công đoạn: {item.maCongDoan}</Text>
-                                        <Text style={styles.itemSoLuong}>{item.totalSoLuong}</Text>
-                                    </View>
-                                ))}
-                                {day.items.length === 0 && (
-                                    <Text style={styles.emptyText}>Không có sản lượng</Text>
-                                )}
-                                {day.hoTro !== undefined && Number(day.hoTro) > 0 && (
-                                    <View style={[styles.itemRow, styles.itemRowLast]}>
-                                        <Text style={styles.itemMa}>Hổ trợ</Text>
-                                        <Text style={styles.itemSoLuong}>{day.hoTro}</Text>
-                                    </View>
-                                )}
-                            </View>
-                        </View>
-                    ))}
-                </ScrollView>
-            )}
+                        ))}
+                    </ScrollView>
+                )}
+            </View>
         </SafeAreaView>
     );
 }
@@ -151,19 +153,21 @@ export default function SanLuongScreen() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
+        backgroundColor: '#007AFF',
+    },
+    mainContent: {
+        flex: 1,
         backgroundColor: '#F2F2F7',
     },
     header: {
-        backgroundColor: '#F2F2F7',
-        paddingHorizontal: 16,
-        paddingBottom: 8,
-        paddingTop: 16,
+        backgroundColor: '#007AFF',
+        paddingVertical: 14,
+        alignItems: 'center',
     },
     headerTitle: {
-        fontSize: 34,
+        fontSize: 20,
         fontWeight: '700',
-        color: '#000000',
-        letterSpacing: 0.37,
+        color: '#FFFFFF',
     },
     centerContainer: {
         flex: 1,

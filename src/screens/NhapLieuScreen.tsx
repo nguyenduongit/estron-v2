@@ -400,22 +400,21 @@ export default function NhapLieuScreen() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#F2F2F7',
+        backgroundColor: '#007AFF',
     },
     header: {
-        backgroundColor: '#F2F2F7',
-        paddingHorizontal: 16,
-        paddingBottom: 8,
-        paddingTop: 16,
+        backgroundColor: '#007AFF',
+        paddingVertical: 14,
+        alignItems: 'center',
     },
     headerTitle: {
-        fontSize: 34,
+        fontSize: 20,
         fontWeight: '700',
-        color: '#000000',
-        letterSpacing: 0.37,
+        color: '#FFFFFF',
     },
     container: {
         flex: 1,
+        backgroundColor: '#F2F2F7',
     },
     formGroup: {
         backgroundColor: '#FFFFFF',
