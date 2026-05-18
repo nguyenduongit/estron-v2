@@ -15,7 +15,7 @@ const pwaTags = `
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Estron" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="application-name" content="Estron" />
@@ -54,6 +54,9 @@ html = html.replace(
 const safeAreaCSS = `
     <style id="pwa-safe-area">
       #root {
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
         box-sizing: border-box;
         background-color: #F9F9F9; /* Match Navigator background */
       }

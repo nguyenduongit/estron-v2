@@ -74,12 +74,12 @@ const styles = StyleSheet.create({
     },
     header: {
         backgroundColor: '#007AFF',
-        paddingVertical: 10,
+        paddingVertical: 14,
         alignItems: 'center',
     },
     headerTitle: {
-        fontSize: 18,
-        fontWeight: '600',
+        fontSize: 20,
+        fontWeight: '700',
         color: '#FFFFFF',
     },
     container: {
