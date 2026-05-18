@@ -93,7 +93,7 @@ export default function SanLuongScreen() {
                                         key={item.maCongDoan} 
                                         style={[
                                             styles.itemRow, 
-                                            index === day.items.length - 1 && day.hoTro === undefined && styles.itemRowLast
+                                            index === day.items.length - 1 && (!day.hoTro || day.hoTro <= 0) && styles.itemRowLast
                                         ]}
                                     >
                                         <Text style={styles.itemMa}>Công đoạn: {item.maCongDoan}</Text>
@@ -103,7 +103,7 @@ export default function SanLuongScreen() {
                                 {day.items.length === 0 && (
                                     <Text style={styles.emptyText}>Không có sản lượng</Text>
                                 )}
-                                {day.hoTro !== undefined && (
+                                {day.hoTro !== undefined && Number(day.hoTro) > 0 && (
                                     <View style={[styles.itemRow, styles.itemRowLast]}>
                                         <Text style={styles.itemMa}>Hổ trợ</Text>
                                         <Text style={styles.itemSoLuong}>{day.hoTro}</Text>
