@@ -12,7 +12,10 @@ export default function SanLuongScreen() {
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
-            const phone = await AsyncStorage.getItem('userPhone');
+            const userDataString = await AsyncStorage.getItem('user');
+            if (!userDataString) return;
+            const user = JSON.parse(userDataString);
+            const phone = user.phone;
             if (!phone) return;
 
             const userData = await fetchUserData(phone);
