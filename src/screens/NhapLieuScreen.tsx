@@ -196,22 +196,17 @@ export default function NhapLieuScreen() {
 
     if (isLoadingData) {
         return (
-            <View style={styles.screenContainer}>
-                <SafeAreaView style={styles.safeArea} edges={['top']} />
-                <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-                    <ActivityIndicator size="large" color="#007AFF" />
-                </View>
-            </View>
+            <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color="#007AFF" />
+            </SafeAreaView>
         );
     }
 
     return (
-        <View style={styles.screenContainer}>
-            <SafeAreaView style={styles.safeArea} edges={['top']}>
-                <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Nhập liệu</Text>
-                </View>
-            </SafeAreaView>
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>Nhập liệu</Text>
+            </View>
             <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
                 <View style={styles.formGroup}>
                     {/* Ngày tháng */}
@@ -398,31 +393,29 @@ export default function NhapLieuScreen() {
                     </View>
                 </View>
             </Modal>
-        </View>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    screenContainer: {
+    safeArea: {
         flex: 1,
         backgroundColor: '#F2F2F7',
     },
-    safeArea: {
-        backgroundColor: '#007AFF',
-    },
     header: {
-        backgroundColor: '#007AFF',
-        paddingVertical: 14,
-        alignItems: 'center',
+        backgroundColor: '#F2F2F7',
+        paddingHorizontal: 16,
+        paddingBottom: 8,
+        paddingTop: 16,
     },
     headerTitle: {
-        fontSize: 20,
+        fontSize: 34,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: '#000000',
+        letterSpacing: 0.37,
     },
     container: {
         flex: 1,
-        backgroundColor: '#F2F2F7',
     },
     formGroup: {
         backgroundColor: '#FFFFFF',
