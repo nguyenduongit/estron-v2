@@ -4,7 +4,7 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
 const ACTIVE_TINT = '#007AFF';
 const INACTIVE_TINT = '#8E8E93';
-const TAB_BAR_HEIGHT = Platform.OS === 'web' ? 0 : 78;
+const TAB_BAR_HEIGHT = Platform.OS === 'web' ? 40 : 78;
 
 export const CUSTOM_TAB_BAR_HEIGHT = TAB_BAR_HEIGHT;
 
