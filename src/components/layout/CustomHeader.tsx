@@ -57,7 +57,27 @@ export default function CustomHeader(props: CustomHeaderProps) {
         titleStyle,
     } = merged;
 
-    const safeAreaEdges = Platform.OS === 'web' ? [] : (['top'] as const);
+    if (Platform.OS === 'web') {
+        return (
+            <View style={[styles.safeArea, { backgroundColor }, containerStyle]}>
+                <View style={[styles.content, { height, backgroundColor }, contentStyle]}>
+                    <View style={styles.side}>
+                        {leftAction ? <ActionButton action={leftAction} /> : null}
+                    </View>
+
+                    <Text numberOfLines={1} style={[styles.title, { color: titleColor }, titleStyle]}>
+                        {title}
+                    </Text>
+
+                    <View style={[styles.side, styles.rightSide]}>
+                        {rightAction ? <ActionButton action={rightAction} /> : null}
+                    </View>
+                </View>
+            </View>
+        );
+    }
+
+    const safeAreaEdges = ['top'] as const;
 
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor: topInsetBackgroundColor }, containerStyle]} edges={safeAreaEdges}>
