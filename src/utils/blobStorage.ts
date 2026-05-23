@@ -69,26 +69,6 @@ export const getUserFolder = (name: string, phone: string) => {
     return `data/${cleanName}-${cleanPhone}`;
 };
 
-const fetchOldUserData = async (phone: string) => {
-    const token = getBlobToken();
-    if (!token) return null;
-    
-    const storeId = token.split('_')[3];
-    const oldUrl = `https://${storeId}.public.blob.vercel-storage.com/data/user_data_${phone}.json?t=${Date.now()}`;
-    const olderUrl = `https://${storeId}.public.blob.vercel-storage.com/user_data_${phone}.json?t=${Date.now()}`;
-    
-    try {
-        let res = await fetch(oldUrl, { cache: 'no-store' });
-        if (!res.ok) {
-            res = await fetch(olderUrl, { cache: 'no-store' });
-            if (!res.ok) return null;
-        }
-        return await res.json();
-    } catch (error) {
-        return null;
-    }
-};
-
 const saveBlobFile = async (path: string, data: any) => {
     const token = getBlobToken();
     const response = await fetch(`https://blob.vercel-storage.com/${path}`, {
@@ -123,12 +103,6 @@ export const fetchUserData = async (user: { name: string, phone: string }, targe
         const res = await fetch(dinhMucUrl, { cache: 'no-store' });
         if (res.ok) {
             congDoan = await res.json();
-        } else {
-            // Fallback: If not found, check if there's old data we can migrate
-            const oldData = await fetchOldUserData(user.phone);
-            if (oldData) {
-                congDoan = oldData.congDoan || [];
-            }
         }
     } catch (error) {
         console.error("fetch dinh_muc error:", error);
@@ -159,40 +133,7 @@ export const fetchUserData = async (user: { name: string, phone: string }, targe
             console.error(`fetch san_luong_${month} error:`, error);
         }
     }
-    
-    // If there was no data in the new structure, see if we can migrate old user data!
-    if (Object.keys(nangSuat).length === 0 && congDoan.length === 0) {
-        const oldData = await fetchOldUserData(user.phone);
-        if (oldData) {
-            console.log("Migrating old user data for phone:", user.phone);
-            congDoan = oldData.congDoan || [];
-            const oldNangSuat = oldData.nangSuat || {};
-            const groupedByMonth: { [key: string]: any } = {};
-            for (const [dateStr, dayVal] of Object.entries(oldNangSuat)) {
-                const m = dateStr.substring(0, 7); // YYYY-MM
-                if (!groupedByMonth[m]) groupedByMonth[m] = {};
-                groupedByMonth[m][dateStr] = dayVal;
-            }
-            
-            try {
-                // Save to new structure
-                await saveBlobFile(`${userFolder}/dinh_muc.json`, congDoan);
-                for (const [m, mData] of Object.entries(groupedByMonth)) {
-                    await saveBlobFile(`${userFolder}/san_luong_${m}.json`, mData);
-                }
-                console.log("Migration successful!");
-            } catch (err) {
-                console.error("Migration save error:", err);
-            }
-            
-            // Assign the parsed months we wanted to return
-            for (const month of months) {
-                if (groupedByMonth[month]) {
-                    Object.assign(nangSuat, groupedByMonth[month]);
-                }
-            }
-        }
-    }
+
     
     return {
         congDoan,
