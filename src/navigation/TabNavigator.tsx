@@ -1,5 +1,4 @@
 import React from 'react';
-import { Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import NhapLieuScreen from '../screens/NhapLieuScreen';
@@ -7,12 +6,14 @@ import SanLuongScreen from '../screens/SanLuongScreen';
 import CongTuanScreen from '../screens/CongTuanScreen';
 import CaiDatScreen from '../screens/CaiDatScreen';
 import CustomHeader from '../components/layout/CustomHeader';
+import CustomTabNavigator from '../components/layout/CustomTabNavigator';
 
 const Tab = createBottomTabNavigator();
 
 export default function TabNavigator() {
   return (
     <Tab.Navigator
+      tabBar={(props) => <CustomTabNavigator {...props} />}
       screenOptions={{
         headerShown: true,
         header: ({ options }) => {
@@ -36,13 +37,6 @@ export default function TabNavigator() {
         },
         tabBarActiveTintColor: '#007AFF',
         tabBarInactiveTintColor: '#8E8E93',
-        tabBarStyle: {
-          backgroundColor: '#F9F9F9',
-          borderTopColor: '#C6C6C8',
-          borderTopWidth: 0.5,
-          paddingBottom: Platform.OS === 'web' ? 'env(safe-area-inset-bottom)' : 0,
-          height: Platform.OS === 'web' ? 70 : undefined,
-        } as any,
       }}
     >
       <Tab.Screen
