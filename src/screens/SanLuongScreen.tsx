@@ -18,7 +18,7 @@ export default function SanLuongScreen() {
             const phone = user.phone;
             if (!phone) return;
 
-            const userData = await fetchUserData(phone);
+            const userData = await fetchUserData(user);
             
             // Tính toán tháng Estron hiện tại
             const { startDate, endDate, estronMonth } = getEstronMonthRange();
@@ -36,7 +36,7 @@ export default function SanLuongScreen() {
                 const sanLuong = dayData?.sanLuong || [];
                 const hasData = dayData !== undefined;
                 const hoTro = hasData ? (Number(dayData.thoiGianHoTro) || 0) : 0;
-                const thucHien = hasData ? (Number(dayData.thoiGianThucHien) || 0) : 0;
+                const thucHien = hasData ? (dayData.thoiGianThucHien !== undefined ? Number(dayData.thoiGianThucHien) : 480) : 0;
                 
                 // Gom nhóm theo mã công đoạn và tính tổng số lượng
                 const groupedMap: { [key: string]: number } = {};
@@ -74,6 +74,7 @@ export default function SanLuongScreen() {
                     formattedDate,
                     items: groupedArray,
                     hoTro: hasData ? dayData.thoiGianHoTro : undefined,
+                    thoiGianThucHien: hasData ? thucHien : undefined,
                     congTrongNgayDisplay,
                     congColor
                 };
@@ -109,7 +110,12 @@ export default function SanLuongScreen() {
                             <View style={styles.dateHeader}>
                                 <Text style={styles.dateText}>{day.formattedDate}</Text>
                                 {day.congTrongNgayDisplay !== null && (
-                                    <Text style={[styles.congText, { color: day.congColor }]}>{day.congTrongNgayDisplay}</Text>
+                                    <Text style={[styles.congText, { color: day.congColor }]}>
+                                        {day.congTrongNgayDisplay}
+                                        {day.thoiGianThucHien !== undefined && (
+                                            <Text style={styles.thucHienText}>/{day.thoiGianThucHien}</Text>
+                                        )}
+                                    </Text>
                                 )}
                             </View>
                             <View style={styles.itemsContainer}>
@@ -190,6 +196,11 @@ const styles = StyleSheet.create({
     congText: {
         fontSize: 19,
         fontWeight: '800',
+    },
+    thucHienText: {
+        fontSize: 14,
+        fontWeight: '400',
+        color: '#8E8E93',
     },
     itemsContainer: {
         paddingLeft: 16,

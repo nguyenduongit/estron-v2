@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Platform, Alert, ActivityIndicator, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchUserData, saveUserData } from '../utils/blobStorage';
+import { getEstronMonthRange, formatLocalDateStr } from '../utils/dateUtils';
 
 interface CongDoan {
     maCongDoan: string;
@@ -32,13 +33,11 @@ export default function NhapLieuScreen() {
     const [newMa, setNewMa] = useState('');
     const [newDinhMuc, setNewDinhMuc] = useState('');
 
-    useEffect(() => {
-        loadUserData();
-    }, []);
+
 
     useEffect(() => {
         if (fullData && fullData.nangSuat) {
-            const dateStr = date.toISOString().split('T')[0];
+            const dateStr = formatLocalDateStr(date);
             const dataForDate = fullData.nangSuat[dateStr];
             if (dataForDate) {
                 setThoiGianThucHien(dataForDate.thoiGianThucHien !== undefined ? dataForDate.thoiGianThucHien.toString() : '480');
@@ -53,7 +52,7 @@ export default function NhapLieuScreen() {
         }
     }, [date, fullData]);
 
-    const loadUserData = async () => {
+    const loadUserData = useCallback(async (targetDate: Date) => {
         setIsLoadingData(true);
         try {
             const userDataString = await AsyncStorage.getItem('user');
@@ -61,7 +60,7 @@ export default function NhapLieuScreen() {
                 const u = JSON.parse(userDataString);
                 setUser(u);
 
-                const data = await fetchUserData(u.phone);
+                const data: any = await fetchUserData(u, targetDate);
                 if (data) {
                     if (data.sanLuong && !data.nangSuat) {
                         data.nangSuat = {};
@@ -94,7 +93,14 @@ export default function NhapLieuScreen() {
         } finally {
             setIsLoadingData(false);
         }
-    };
+    }, []);
+
+    const { estronMonth, estronYear } = getEstronMonthRange(date);
+    const estronMonthKey = `${estronYear}-${estronMonth}`;
+
+    useEffect(() => {
+        loadUserData(date);
+    }, [estronMonthKey, loadUserData]);
 
     const handleSaveNewCongDoan = async () => {
         if (!newMa || !newDinhMuc) {
@@ -119,7 +125,7 @@ export default function NhapLieuScreen() {
 
         // Save immediately to Blob
         try {
-            await saveUserData(user.phone, updatedData);
+            await saveUserData(user, updatedData);
         } catch (e) {
             console.error("Save cong doan error:", e);
         }
@@ -141,7 +147,7 @@ export default function NhapLieuScreen() {
 
         setIsSaving(true);
         try {
-            const dateStr = date.toISOString().split('T')[0];
+            const dateStr = formatLocalDateStr(date);
             const updatedData = { ...fullData };
 
             if (!updatedData.nangSuat) updatedData.nangSuat = {};
@@ -163,7 +169,7 @@ export default function NhapLieuScreen() {
                 timestamp: new Date().toISOString()
             });
 
-            await saveUserData(user.phone, updatedData);
+            await saveUserData(user, updatedData);
             setFullData(updatedData);
 
             if (Platform.OS === 'web') {
@@ -217,9 +223,12 @@ export default function NhapLieuScreen() {
                                 <Text style={styles.dateText}>{formatDate(date)}</Text>
                                 <input
                                     type="date"
-                                    value={date.toISOString().split('T')[0]}
+                                    value={formatLocalDateStr(date)}
                                     onChange={(e) => {
-                                        if (e.target.value) setDate(new Date(e.target.value));
+                                        if (e.target.value) {
+                                            const [y, m, d] = e.target.value.split('-').map(Number);
+                                            setDate(new Date(y, m - 1, d));
+                                        }
                                     }}
                                     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
                                 />

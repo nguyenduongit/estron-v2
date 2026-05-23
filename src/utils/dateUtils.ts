@@ -53,6 +53,13 @@ export const getEstronDays = (startDate: Date, endDate: Date) => {
         current.setDate(current.getDate() + 1);
     }
     
-    // Sort descending (latest day first)
-    return days.sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+    // Sort ascending (earliest day first, beginning of month on top)
+    return days.sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+};
+
+export const formatLocalDateStr = (d: Date) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
 };
