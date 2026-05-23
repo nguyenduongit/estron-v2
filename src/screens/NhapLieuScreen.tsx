@@ -203,7 +203,11 @@ export default function NhapLieuScreen() {
 
     return (
         <View style={styles.screen}>
-            <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={styles.contentContainer}
+                keyboardShouldPersistTaps="handled"
+            >
                 <View style={styles.formGroup}>
                     {/* Ngày tháng */}
                     <View style={styles.row}>
@@ -294,6 +298,8 @@ export default function NhapLieuScreen() {
                         />
                     </View>
 
+                    <View style={styles.divider} />
+
                     {/* Thời gian thực hiện */}
                     <View style={styles.row}>
                         <Text style={styles.label}>Thời gian thực hiện</Text>
@@ -336,7 +342,6 @@ export default function NhapLieuScreen() {
                         />
                     </View>
 
-                    <View style={styles.divider} />
                 </View>
 
                 <TouchableOpacity
@@ -401,11 +406,12 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    contentContainer: {
+        padding: 16,
+    },
     formGroup: {
         backgroundColor: '#FFFFFF',
         borderRadius: 10,
-        marginHorizontal: 16,
-        marginTop: 24,
         overflow: 'hidden',
     },
     row: {
@@ -413,8 +419,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
-        minHeight: 44,
-        paddingVertical: 8,
+        height: 50,
     },
     divider: {
         height: StyleSheet.hairlineWidth,
@@ -489,8 +494,7 @@ const styles = StyleSheet.create({
     saveButton: {
         backgroundColor: '#007AFF',
         borderRadius: 10,
-        marginHorizontal: 16,
-        marginTop: 32,
+        marginTop: 16,
         paddingVertical: 14,
         alignItems: 'center',
         justifyContent: 'center',
