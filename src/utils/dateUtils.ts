@@ -63,3 +63,19 @@ export const formatLocalDateStr = (d: Date) => {
     const dd = String(d.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
 };
+
+export const getLocalISOString = (d: Date = new Date()) => {
+    const tzo = -d.getTimezoneOffset();
+    const dif = tzo >= 0 ? '+' : '-';
+    const pad = (num: number) => String(num).padStart(2, '0');
+    
+    return d.getFullYear() +
+        '-' + pad(d.getMonth() + 1) +
+        '-' + pad(d.getDate()) +
+        'T' + pad(d.getHours()) +
+        ':' + pad(d.getMinutes()) +
+        ':' + pad(d.getSeconds()) +
+        '.' + String(d.getMilliseconds()).padStart(3, '0') +
+        dif + pad(Math.floor(Math.abs(tzo) / 60)) +
+        ':' + pad(Math.abs(tzo) % 60);
+};

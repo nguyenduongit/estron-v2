@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityInd
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchUsers, saveUsers } from '../utils/blobStorage';
+import { getLocalISOString } from '../utils/dateUtils';
 
 interface AuthScreenProps {
     onAuthSuccess: (user: any) => void;
@@ -43,7 +44,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                 if (existingUser) {
                     Platform.OS === 'web' ? alert('Số điện thoại đã được đăng ký!') : Alert.alert('Lỗi', 'Số điện thoại đã được đăng ký!');
                 } else {
-                    const newUser = { id: Date.now().toString(), name: name.trim(), phone: phone.trim(), createdAt: new Date().toISOString() };
+                    const newUser = { id: Date.now().toString(), name: name.trim(), phone: phone.trim(), createdAt: getLocalISOString() };
                     users.push(newUser);
                     await saveUsers(users);
                     await AsyncStorage.setItem('user', JSON.stringify(newUser));

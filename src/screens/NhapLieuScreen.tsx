@@ -5,7 +5,7 @@ import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchUserData, saveUserData } from '../utils/blobStorage';
-import { getEstronMonthRange, formatLocalDateStr } from '../utils/dateUtils';
+import { getEstronMonthRange, formatLocalDateStr, getLocalISOString } from '../utils/dateUtils';
 
 interface CongDoan {
     maCongDoan: string;
@@ -166,7 +166,7 @@ export default function NhapLieuScreen() {
             updatedData.nangSuat[dateStr].sanLuong.push({
                 maCongDoan,
                 soLuong: Number(soLuong),
-                timestamp: new Date().toISOString()
+                timestamp: getLocalISOString()
             });
 
             await saveUserData(user, updatedData);
