@@ -148,26 +148,24 @@ export default function NhapLieuScreen() {
         setIsSaving(true);
         try {
             const dateStr = formatLocalDateStr(date);
-            const updatedData = { ...fullData };
-
-            if (!updatedData.nangSuat) updatedData.nangSuat = {};
-
-            if (!updatedData.nangSuat[dateStr]) {
-                updatedData.nangSuat[dateStr] = {
-                    thoiGianThucHien: thoiGianThucHien === '' ? 480 : Number(thoiGianThucHien),
-                    thoiGianHoTro: thoiGianHoTro === '' ? 0 : Number(thoiGianHoTro),
-                    sanLuong: []
-                };
-            } else {
-                updatedData.nangSuat[dateStr].thoiGianThucHien = thoiGianThucHien === '' ? 480 : Number(thoiGianThucHien);
-                updatedData.nangSuat[dateStr].thoiGianHoTro = thoiGianHoTro === '' ? 0 : Number(thoiGianHoTro);
-            }
-
-            updatedData.nangSuat[dateStr].sanLuong.push({
-                maCongDoan,
-                soLuong: Number(soLuong),
-                timestamp: getLocalISOString()
-            });
+            const updatedData = {
+                ...fullData,
+                nangSuat: {
+                    ...(fullData?.nangSuat || {}),
+                    [dateStr]: {
+                        thoiGianThucHien: thoiGianThucHien === '' ? 480 : Number(thoiGianThucHien),
+                        thoiGianHoTro: thoiGianHoTro === '' ? 0 : Number(thoiGianHoTro),
+                        sanLuong: [
+                            ...(fullData?.nangSuat?.[dateStr]?.sanLuong || []),
+                            {
+                                maCongDoan,
+                                soLuong: Number(soLuong),
+                                timestamp: getLocalISOString()
+                            }
+                        ]
+                    }
+                }
+            };
 
             await saveUserData(user, updatedData);
             setFullData(updatedData);
