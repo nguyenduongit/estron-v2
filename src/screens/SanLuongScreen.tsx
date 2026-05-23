@@ -1,6 +1,5 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchUserData } from '../utils/blobStorage';
 import { useFocusEffect } from '@react-navigation/native';
@@ -94,11 +93,7 @@ export default function SanLuongScreen() {
     );
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Sản lượng</Text>
-            </View>
-            
+        <View style={styles.screen}>
             {loading ? (
                 <View style={styles.centerContainer}>
                     <ActivityIndicator size="large" color="#007AFF" />
@@ -118,7 +113,7 @@ export default function SanLuongScreen() {
                                 )}
                             </View>
                             <View style={styles.itemsContainer}>
-                                {day.items.map((item, index) => (
+                                {day.items.map((item: any, index: number) => (
                                     <View 
                                         key={item.maCongDoan} 
                                         style={[
@@ -144,26 +139,14 @@ export default function SanLuongScreen() {
                     ))}
                 </ScrollView>
             )}
-        </SafeAreaView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
+    screen: {
         flex: 1,
         backgroundColor: '#F2F2F7',
-    },
-    header: {
-        backgroundColor: '#F2F2F7',
-        paddingHorizontal: 16,
-        paddingBottom: 8,
-        paddingTop: 16,
-    },
-    headerTitle: {
-        fontSize: 34,
-        fontWeight: '700',
-        color: '#000000',
-        letterSpacing: 0.37,
     },
     centerContainer: {
         flex: 1,

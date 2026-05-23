@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Platform, Alert, ActivityIndicator, Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -196,17 +195,14 @@ export default function NhapLieuScreen() {
 
     if (isLoadingData) {
         return (
-            <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
+            <View style={[styles.screen, { justifyContent: 'center', alignItems: 'center' }]}>
                 <ActivityIndicator size="large" color="#007AFF" />
-            </SafeAreaView>
+            </View>
         );
     }
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Nhập liệu</Text>
-            </View>
+        <View style={styles.screen}>
             <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
                 <View style={styles.formGroup}>
                     {/* Ngày tháng */}
@@ -393,26 +389,14 @@ export default function NhapLieuScreen() {
                     </View>
                 </View>
             </Modal>
-        </SafeAreaView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
+    screen: {
         flex: 1,
         backgroundColor: '#F2F2F7',
-    },
-    header: {
-        backgroundColor: '#F2F2F7',
-        paddingHorizontal: 16,
-        paddingBottom: 8,
-        paddingTop: 16,
-    },
-    headerTitle: {
-        fontSize: 34,
-        fontWeight: '700',
-        color: '#000000',
-        letterSpacing: 0.37,
     },
     container: {
         flex: 1,

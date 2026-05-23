@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, DeviceEventEmitter, Alert, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function CaiDatScreen() {
@@ -37,10 +36,7 @@ export default function CaiDatScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Cài đặt</Text>
-            </View>
+        <View style={styles.screen}>
             <View style={styles.container}>
                 <View style={styles.userInfoGroup}>
                     <View style={styles.row}>
@@ -58,26 +54,14 @@ export default function CaiDatScreen() {
                     <Text style={styles.logoutText}>Đăng xuất</Text>
                 </TouchableOpacity>
             </View>
-        </SafeAreaView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
+    screen: {
         flex: 1,
         backgroundColor: '#F2F2F7',
-    },
-    header: {
-        backgroundColor: '#F2F2F7',
-        paddingHorizontal: 16,
-        paddingBottom: 8,
-        paddingTop: 16,
-    },
-    headerTitle: {
-        fontSize: 34,
-        fontWeight: '700',
-        color: '#000000',
-        letterSpacing: 0.37,
     },
     container: {
         flex: 1,
