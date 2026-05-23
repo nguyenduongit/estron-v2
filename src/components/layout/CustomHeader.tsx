@@ -38,7 +38,7 @@ export interface CustomHeaderProps {
     platformOptions?: Partial<Record<PlatformName, Partial<Omit<CustomHeaderProps, 'title' | 'platformOptions'>>>>;
 }
 
-const DEFAULT_BACKGROUND = '#F2F2F7';
+const DEFAULT_BACKGROUND = '#007AFF';
 const DEFAULT_TINT = '#007AFF';
 
 export default function CustomHeader(props: CustomHeaderProps) {
