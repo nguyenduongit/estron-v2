@@ -47,7 +47,7 @@ export default function CustomHeader(props: CustomHeaderProps) {
     const {
         title,
         backgroundColor = DEFAULT_BACKGROUND,
-        titleColor = '#000000',
+        titleColor = '#ffffff',
         topInsetBackgroundColor = backgroundColor,
         height = Platform.OS === 'web' ? 56 : 52,
         leftAction,
@@ -57,8 +57,10 @@ export default function CustomHeader(props: CustomHeaderProps) {
         titleStyle,
     } = merged;
 
+    const safeAreaEdges = Platform.OS === 'web' ? [] : (['top'] as const);
+
     return (
-        <SafeAreaView style={[styles.safeArea, { backgroundColor: topInsetBackgroundColor }, containerStyle]} edges={['top']}>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: topInsetBackgroundColor }, containerStyle]} edges={safeAreaEdges}>
             <View style={[styles.content, { height, backgroundColor }, contentStyle]}>
                 <View style={styles.side}>
                     {leftAction ? <ActionButton action={leftAction} /> : null}
