@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { View, ActivityIndicator, DeviceEventEmitter } from 'react-native';
+import { View, ActivityIndicator, DeviceEventEmitter, Platform } from 'react-native';
 
 import TabNavigator from './src/navigation/TabNavigator';
 import AuthScreen from './src/screens/AuthScreen';
@@ -13,6 +13,20 @@ export default function App() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    if (Platform.OS === 'web') {
+      const style = document.createElement('style');
+      style.textContent = `
+        ::-webkit-scrollbar {
+          display: none !important;
+        }
+        * {
+          -ms-overflow-style: none !important;
+          scrollbar-width: none !important;
+        }
+      `;
+      document.head.append(style);
+    }
+
     const checkLoginStatus = async () => {
       try {
         const userData = await AsyncStorage.getItem('user');

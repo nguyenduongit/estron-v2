@@ -110,13 +110,12 @@ export const fetchUserData = async (user: { name: string, phone: string }, targe
     
     // 2. Fetch production data (san_luong_YYYY-MM.json) for the current Estron month range
     const { startDate, endDate } = getEstronMonthRange(targetDate);
-    const getYearMonthStr = (d: Date) => {
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        return `${yyyy}-${mm}`;
+    const getEstronMonthStr = (d: Date) => {
+        const { estronYear, estronMonth } = getEstronMonthRange(d);
+        return `${estronYear}-${String(estronMonth).padStart(2, '0')}`;
     };
     
-    const months = Array.from(new Set([getYearMonthStr(startDate), getYearMonthStr(endDate)]));
+    const months = Array.from(new Set([getEstronMonthStr(startDate), getEstronMonthStr(endDate)]));
     const nangSuat: { [key: string]: any } = {};
     
     for (const month of months) {
@@ -153,14 +152,18 @@ export const saveUserData = async (user: { name: string, phone: string }, data: 
         await saveBlobFile(`${userFolder}/dinh_muc.json`, data.congDoan);
     }
     
-    // 2. Group the local nangSuat data by month
+    // 2. Group the local nangSuat data by Estron month
     const localNangSuat = data.nangSuat || {};
     const monthsToSave: { [key: string]: string[] } = {};
     
     for (const dateStr of Object.keys(localNangSuat)) {
-        const m = dateStr.substring(0, 7); // YYYY-MM
-        if (!monthsToSave[m]) monthsToSave[m] = [];
-        monthsToSave[m].push(dateStr);
+        const [yyyy, mm, dd] = dateStr.split('-').map(Number);
+        const d = new Date(yyyy, mm - 1, dd);
+        const { estronYear, estronMonth } = getEstronMonthRange(d);
+        const estronM = `${estronYear}-${String(estronMonth).padStart(2, '0')}`;
+        
+        if (!monthsToSave[estronM]) monthsToSave[estronM] = [];
+        monthsToSave[estronM].push(dateStr);
     }
     
     // For each month, load existing, merge, and save

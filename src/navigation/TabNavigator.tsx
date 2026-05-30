@@ -22,8 +22,6 @@ export default function TabNavigator() {
           return (
             <CustomHeader
               title={headerOptions.headerTitleText ?? options.title ?? ''}
-              leftAction={headerOptions.headerLeftAction}
-              rightAction={headerOptions.headerRightAction}
               backgroundColor={headerOptions.headerBackgroundColor}
               topInsetBackgroundColor={headerOptions.headerSafeAreaColor}
               titleColor={headerOptions.headerTitleColor}

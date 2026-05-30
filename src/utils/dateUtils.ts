@@ -42,14 +42,11 @@ export const getEstronDays = (startDate: Date, endDate: Date) => {
     let current = new Date(startDate);
     
     while (current <= endDate) {
-        // Skip Sundays (0 is Sunday)
-        if (current.getDay() !== 0) {
-            // Format to UTC string part to avoid timezone shifts
-            const yyyy = current.getFullYear();
-            const mm = String(current.getMonth() + 1).padStart(2, '0');
-            const dd = String(current.getDate()).padStart(2, '0');
-            days.push(`${yyyy}-${mm}-${dd}`);
-        }
+        // Format to local date string to avoid timezone shifts
+        const yyyy = current.getFullYear();
+        const mm = String(current.getMonth() + 1).padStart(2, '0');
+        const dd = String(current.getDate()).padStart(2, '0');
+        days.push(`${yyyy}-${mm}-${dd}`);
         current.setDate(current.getDate() + 1);
     }
     
@@ -78,4 +75,50 @@ export const getLocalISOString = (d: Date = new Date()) => {
         '.' + String(d.getMilliseconds()).padStart(3, '0') +
         dif + pad(Math.floor(Math.abs(tzo) / 60)) +
         ':' + pad(Math.abs(tzo) % 60);
+};
+
+export interface WeekRange {
+    weekIndex: number;
+    startDate: Date;
+    endDate: Date;
+    days: string[];
+}
+
+export const getEstronWeeks = (startDate: Date, endDate: Date): WeekRange[] => {
+    const weeks: WeekRange[] = [];
+    let current = new Date(startDate);
+    
+    for (let w = 1; w <= 5; w++) {
+        if (current > endDate) break;
+        
+        const weekDays: string[] = [];
+        const wStart = new Date(current);
+        let wEnd = new Date(current);
+        
+        while (current <= endDate) {
+            const yyyy = current.getFullYear();
+            const mm = String(current.getMonth() + 1).padStart(2, '0');
+            const dd = String(current.getDate()).padStart(2, '0');
+            const dateStr = `${yyyy}-${mm}-${dd}`;
+            
+            weekDays.push(dateStr);
+            wEnd = new Date(current);
+            
+            const isSunday = current.getDay() === 0;
+            current.setDate(current.getDate() + 1);
+            
+            if (isSunday) {
+                break;
+            }
+        }
+        
+        weeks.push({
+            weekIndex: w,
+            startDate: wStart,
+            endDate: wEnd,
+            days: weekDays
+        });
+    }
+    
+    return weeks;
 };

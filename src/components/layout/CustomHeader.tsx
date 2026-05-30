@@ -5,33 +5,19 @@ import {
     StyleSheet,
     Text,
     TextStyle,
-    TouchableOpacity,
     View,
     ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 
 type PlatformName = 'ios' | 'android' | 'web';
 
-export interface HeaderAction {
-    icon: React.ComponentProps<typeof Ionicons>['name'];
-    onPress: () => void;
-    color?: string;
-    size?: number;
-    accessibilityLabel?: string;
-    disabled?: boolean;
-    style?: StyleProp<ViewStyle>;
-}
-
 export interface CustomHeaderProps {
-    title: string;
+    title: React.ReactNode;
     backgroundColor?: string;
     titleColor?: string;
     height?: number;
     topInsetBackgroundColor?: string;
-    leftAction?: HeaderAction;
-    rightAction?: HeaderAction;
     containerStyle?: StyleProp<ViewStyle>;
     contentStyle?: StyleProp<ViewStyle>;
     titleStyle?: StyleProp<TextStyle>;
@@ -50,8 +36,6 @@ export default function CustomHeader(props: CustomHeaderProps) {
         titleColor = '#ffffff',
         topInsetBackgroundColor = backgroundColor,
         height = Platform.OS === 'web' ? 56 : 52,
-        leftAction,
-        rightAction,
         containerStyle,
         contentStyle,
         titleStyle,
@@ -61,17 +45,15 @@ export default function CustomHeader(props: CustomHeaderProps) {
         return (
             <View style={[styles.safeArea, { backgroundColor }, containerStyle]}>
                 <View style={[styles.content, { height, backgroundColor }, contentStyle]}>
-                    <View style={styles.side}>
-                        {leftAction ? <ActionButton action={leftAction} /> : null}
-                    </View>
-
-                    <Text numberOfLines={1} style={[styles.title, { color: titleColor }, titleStyle]}>
-                        {title}
-                    </Text>
-
-                    <View style={[styles.side, styles.rightSide]}>
-                        {rightAction ? <ActionButton action={rightAction} /> : null}
-                    </View>
+                    {typeof title === 'string' || typeof title === 'number' ? (
+                        <Text numberOfLines={1} style={[styles.title, { color: titleColor }, titleStyle]}>
+                            {title}
+                        </Text>
+                    ) : (
+                        <View style={styles.titleContainer}>
+                            {title}
+                        </View>
+                    )}
                 </View>
             </View>
         );
@@ -82,33 +64,17 @@ export default function CustomHeader(props: CustomHeaderProps) {
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor: topInsetBackgroundColor }, containerStyle]} edges={safeAreaEdges}>
             <View style={[styles.content, { height, backgroundColor }, contentStyle]}>
-                <View style={styles.side}>
-                    {leftAction ? <ActionButton action={leftAction} /> : null}
-                </View>
-
-                <Text numberOfLines={1} style={[styles.title, { color: titleColor }, titleStyle]}>
-                    {title}
-                </Text>
-
-                <View style={[styles.side, styles.rightSide]}>
-                    {rightAction ? <ActionButton action={rightAction} /> : null}
-                </View>
+                {typeof title === 'string' || typeof title === 'number' ? (
+                    <Text numberOfLines={1} style={[styles.title, { color: titleColor }, titleStyle]}>
+                        {title}
+                    </Text>
+                ) : (
+                    <View style={styles.titleContainer}>
+                        {title}
+                    </View>
+                )}
             </View>
         </SafeAreaView>
-    );
-}
-
-function ActionButton({ action }: { action: HeaderAction }) {
-    return (
-        <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel={action.accessibilityLabel}
-            disabled={action.disabled}
-            onPress={action.onPress}
-            style={[styles.actionButton, action.disabled && styles.actionButtonDisabled, action.style]}
-        >
-            <Ionicons name={action.icon} size={action.size ?? 24} color={action.color ?? DEFAULT_TINT} />
-        </TouchableOpacity>
     );
 }
 
@@ -123,28 +89,17 @@ const styles = StyleSheet.create({
         borderBottomWidth: StyleSheet.hairlineWidth,
         borderBottomColor: '#C6C6C8',
     },
-    side: {
-        width: 52,
-        alignItems: 'flex-start',
-        justifyContent: 'center',
-    },
-    rightSide: {
-        alignItems: 'flex-end',
-    },
-    actionButton: {
-        width: 44,
-        height: 44,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    actionButtonDisabled: {
-        opacity: 0.35,
-    },
     title: {
         flex: 1,
         minWidth: 0,
         textAlign: 'center',
         fontSize: 17,
         fontWeight: '600',
+    },
+    titleContainer: {
+        flex: 1,
+        minWidth: 0,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
 });

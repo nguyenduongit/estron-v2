@@ -12,6 +12,13 @@ interface CongDoan {
     dinhMuc: number;
 }
 
+const getDefaultThucHien = (d: Date) => {
+    const dayOfWeek = d.getDay();
+    if (dayOfWeek === 0) return '0'; // Chủ nhật
+    if (dayOfWeek === 6) return '240'; // Thứ 7
+    return '480'; // Thứ 2 đến thứ 6
+};
+
 export default function NhapLieuScreen() {
     const [user, setUser] = useState<any>(null);
     const [date, setDate] = useState(new Date());
@@ -21,7 +28,7 @@ export default function NhapLieuScreen() {
     const [danhSachCongDoan, setDanhSachCongDoan] = useState<CongDoan[]>([]);
     const [maCongDoan, setMaCongDoan] = useState('');
     const [soLuong, setSoLuong] = useState('');
-    const [thoiGianThucHien, setThoiGianThucHien] = useState('480');
+    const [thoiGianThucHien, setThoiGianThucHien] = useState(getDefaultThucHien(new Date()));
     const [thoiGianHoTro, setThoiGianHoTro] = useState('0');
 
     const [isSaving, setIsSaving] = useState(false);
@@ -36,18 +43,19 @@ export default function NhapLieuScreen() {
 
 
     useEffect(() => {
+        const defaultThucHien = getDefaultThucHien(date);
         if (fullData && fullData.nangSuat) {
             const dateStr = formatLocalDateStr(date);
             const dataForDate = fullData.nangSuat[dateStr];
             if (dataForDate) {
-                setThoiGianThucHien(dataForDate.thoiGianThucHien !== undefined ? dataForDate.thoiGianThucHien.toString() : '480');
+                setThoiGianThucHien(dataForDate.thoiGianThucHien !== undefined ? dataForDate.thoiGianThucHien.toString() : defaultThucHien);
                 setThoiGianHoTro(dataForDate.thoiGianHoTro !== undefined ? dataForDate.thoiGianHoTro.toString() : '0');
             } else {
-                setThoiGianThucHien('480');
+                setThoiGianThucHien(defaultThucHien);
                 setThoiGianHoTro('0');
             }
         } else {
-            setThoiGianThucHien('480');
+            setThoiGianThucHien(defaultThucHien);
             setThoiGianHoTro('0');
         }
     }, [date, fullData]);
@@ -153,7 +161,7 @@ export default function NhapLieuScreen() {
                 nangSuat: {
                     ...(fullData?.nangSuat || {}),
                     [dateStr]: {
-                        thoiGianThucHien: thoiGianThucHien === '' ? 480 : Number(thoiGianThucHien),
+                        thoiGianThucHien: thoiGianThucHien === '' ? Number(getDefaultThucHien(date)) : Number(thoiGianThucHien),
                         thoiGianHoTro: thoiGianHoTro === '' ? 0 : Number(thoiGianHoTro),
                         sanLuong: [
                             ...(fullData?.nangSuat?.[dateStr]?.sanLuong || []),
@@ -211,6 +219,8 @@ export default function NhapLieuScreen() {
                 style={styles.container}
                 contentContainerStyle={styles.contentContainer}
                 keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                showsHorizontalScrollIndicator={false}
             >
                 <View style={styles.formGroup}>
                     {/* Ngày tháng */}
@@ -319,10 +329,10 @@ export default function NhapLieuScreen() {
                             keyboardType="numeric"
                             returnKeyType="done"
                             onFocus={() => {
-                                if (thoiGianThucHien === '480') setThoiGianThucHien('');
+                                if (thoiGianThucHien === getDefaultThucHien(date)) setThoiGianThucHien('');
                             }}
                             onBlur={() => {
-                                if (thoiGianThucHien.trim() === '') setThoiGianThucHien('480');
+                                if (thoiGianThucHien.trim() === '') setThoiGianThucHien(getDefaultThucHien(date));
                             }}
                         />
                     </View>
