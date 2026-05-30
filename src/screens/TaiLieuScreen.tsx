@@ -201,6 +201,69 @@ const CHINH_SACH_CHAT_LUONG = {
     ]
 };
 
+const CORE_VALUES = {
+    title: '5 GIÁ TRỊ CỐT LÕI',
+    meta: '9 | 27/01/2026',
+    websites: 'estron.dk | linum.dk',
+    values: [
+        {
+            id: '1',
+            title: 'HỢP TÁC',
+            slogan: 'Cùng làm – cùng chịu trách nhiệm',
+            bullets: [
+                'Hỗ trợ và tôn trọng lẫn nhau',
+                'Phối hợp chặt chẽ giữa các bộ phận',
+                'Có vấn đề thì cùng giải quyết, không đổ lỗi'
+            ],
+            summary: 'Hợp tác tốt giúp giảm áp lực, giảm lỗi và công việc trôi chảy hơn.'
+        },
+        {
+            id: '2',
+            title: 'CHẤT LƯỢNG',
+            slogan: 'Làm đúng ngay từ đầu',
+            bullets: [
+                'Tuân thủ quy trình, tiêu chuẩn và yêu cầu khách hàng',
+                'Không bỏ qua lỗi nhỏ, không làm ẩu cho nhanh',
+                'Mỗi người chịu trách nhiệm cho chất lượng công đoạn của mình'
+            ],
+            summary: 'Một lỗi nhỏ có thể ảnh hưởng cả chuyền và khách hàng.'
+        },
+        {
+            id: '3',
+            title: 'ĐỔI MỚI',
+            slogan: 'Cải tiến từ chính công việc hằng ngày',
+            bullets: [
+                'An toàn hơn – ít lỗi hơn – đỡ vất vả hơn',
+                'Mọi ý tưởng cải tiến đều đáng được lắng nghe',
+                'Cải tiến nhỏ nhưng mang lại hiệu quả lớn'
+            ],
+            summary: 'Đổi mới bắt đầu từ những ý tưởng rất nhỏ.'
+        },
+        {
+            id: '4',
+            title: 'NĂNG LỰC CHUYÊN NGHIỆP',
+            slogan: 'Biết việc – làm đúng – có trách nhiệm',
+            bullets: [
+                'Hiểu rõ công việc và công đoạn mình làm',
+                'Tuân thủ an toàn và quy trình',
+                'Chưa rõ thì hỏi, chưa biết thì học'
+            ],
+            summary: 'Chuyên nghiệp không cần chức danh – chỉ cần thái độ đúng.'
+        },
+        {
+            id: '5',
+            title: 'UY TÍN',
+            slogan: 'Nói thật – làm thật – làm đến cùng',
+            bullets: [
+                'Báo đúng tình trạng, báo lỗi sớm',
+                'Không che giấu lỗi, không báo sai',
+                'Giữ cam kết với đồng nghiệp và khách hàng'
+            ],
+            summary: 'Uy tín được xây dựng từ hành động mỗi ngày.'
+        }
+    ]
+};
+
 export default function TaiLieuScreen({ navigation }: any) {
     const [userName, setUserName] = useState('');
     const [userPhone, setUserPhone] = useState('');
@@ -262,6 +325,17 @@ export default function TaiLieuScreen({ navigation }: any) {
                             <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
                         </TouchableOpacity>
                         <Text style={styles.headerTitleLeft}>Chính sách chất lượng</Text>
+                    </View>
+                )
+            });
+        } else if (activeSubScreen === 'core') {
+            navigation.setOptions({
+                headerTitleText: (
+                    <View style={styles.headerTitleContainer}>
+                        <TouchableOpacity onPress={() => setActiveSubScreen(null)} style={styles.headerBackButton}>
+                            <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+                        </TouchableOpacity>
+                        <Text style={styles.headerTitleLeft}>Giá trị cốt lõi</Text>
                     </View>
                 )
             });
@@ -486,6 +560,69 @@ export default function TaiLieuScreen({ navigation }: any) {
         );
     }
 
+    if (activeSubScreen === 'core') {
+        return (
+            <View style={styles.screen}>
+                <ScrollView 
+                    style={styles.subScreenScroll} 
+                    contentContainerStyle={styles.subScreenContent}
+                    showsVerticalScrollIndicator={false}
+                >
+                    {/* Header info */}
+                    <View style={styles.kpiDocHeader}>
+                        <Text style={styles.kpiDocTitle}>{CORE_VALUES.title}</Text>
+                        <View style={styles.kpiDocMeta}>
+                            <Text style={styles.kpiDocDate}>{CORE_VALUES.meta}</Text>
+                            <Text style={styles.kpiDocDate}>{CORE_VALUES.websites}</Text>
+                        </View>
+                    </View>
+
+                    {/* Big stylized number 5 header area */}
+                    <View style={styles.coreLogoCard}>
+                        <View style={styles.coreLogoCircle}>
+                            <Text style={styles.coreLogoNumber}>5</Text>
+                        </View>
+                        <Text style={styles.coreLogoText}>CORE VALUES</Text>
+                    </View>
+
+                    {/* Core value items */}
+                    <View style={{ paddingHorizontal: 16 }}>
+                        {CORE_VALUES.values.map((v) => (
+                            <View key={v.id} style={styles.coreCard}>
+                                {/* Header of card */}
+                                <View style={styles.coreCardHeader}>
+                                    <View style={styles.coreIdBadge}>
+                                        <Text style={styles.coreIdText}>{v.id}</Text>
+                                    </View>
+                                    <View style={styles.coreTitleContainer}>
+                                        <Text style={styles.coreCardTitleText}>{v.title}</Text>
+                                        <Text style={styles.coreCardSloganText}>{v.slogan}</Text>
+                                    </View>
+                                </View>
+
+                                {/* Bullet list */}
+                                <View style={styles.coreBulletsContainer}>
+                                    {v.bullets.map((bullet, index) => (
+                                        <View key={index} style={styles.coreBulletRow}>
+                                            <Ionicons name="checkmark-sharp" size={16} color="#34C759" style={styles.coreBulletCheck} />
+                                            <Text style={styles.coreBulletText}>{bullet}</Text>
+                                        </View>
+                                    ))}
+                                </View>
+
+                                {/* Summary Box */}
+                                <View style={styles.coreSummaryBox}>
+                                    <Ionicons name="thumbs-up" size={18} color="#FF9500" style={styles.coreSummaryIcon} />
+                                    <Text style={styles.coreSummaryText}>{v.summary}</Text>
+                                </View>
+                            </View>
+                        ))}
+                    </View>
+                </ScrollView>
+            </View>
+        );
+    }
+
     if (activeSubScreen === 'policy') {
         return (
             <View style={styles.screen}>
@@ -651,6 +788,11 @@ export default function TaiLieuScreen({ navigation }: any) {
                     <View style={styles.divider} />
                     <TouchableOpacity style={styles.row} onPress={() => setActiveSubScreen('policy')}>
                         <Text style={styles.label}>Chính sách chất lượng</Text>
+                        <Ionicons name="chevron-forward" size={20} color="#C6C6C8" />
+                    </TouchableOpacity>
+                    <View style={styles.divider} />
+                    <TouchableOpacity style={styles.row} onPress={() => setActiveSubScreen('core')}>
+                        <Text style={styles.label}>Giá trị cốt lõi</Text>
                         <Ionicons name="chevron-forward" size={20} color="#C6C6C8" />
                     </TouchableOpacity>
                 </View>
@@ -1228,5 +1370,136 @@ const styles = StyleSheet.create({
         paddingLeft: 34,
         lineHeight: 20,
         fontWeight: '500',
+    },
+    // Core Values Styles
+    coreLogoCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        marginHorizontal: 16,
+        paddingVertical: 24,
+        paddingHorizontal: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#E5E5EA',
+    },
+    coreLogoCircle: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: '#F2F2F7',
+        borderWidth: 4,
+        borderColor: '#007AFF',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+        elevation: 3,
+    },
+    coreLogoNumber: {
+        fontSize: 40,
+        fontWeight: '900',
+        color: '#007AFF',
+    },
+    coreLogoText: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#8E8E93',
+        letterSpacing: 1,
+        textAlign: 'center',
+    },
+    coreCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        padding: 16,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#E5E5EA',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 1,
+    },
+    coreCardHeader: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginBottom: 12,
+    },
+    coreIdBadge: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: '#007AFF',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 10,
+        marginTop: 2,
+    },
+    coreIdText: {
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '700',
+    },
+    coreTitleContainer: {
+        flex: 1,
+    },
+    coreCardTitleText: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#007AFF',
+        lineHeight: 20,
+    },
+    coreCardSloganText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#3A3A3C',
+        marginTop: 2,
+        lineHeight: 18,
+    },
+    coreBulletsContainer: {
+        paddingLeft: 34,
+        marginBottom: 12,
+    },
+    coreBulletRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginVertical: 4,
+    },
+    coreBulletCheck: {
+        marginRight: 8,
+        marginTop: 2,
+    },
+    coreBulletText: {
+        fontSize: 14,
+        color: '#48484A',
+        flex: 1,
+        lineHeight: 20,
+        fontWeight: '400',
+    },
+    coreSummaryBox: {
+        backgroundColor: '#FFF8E1',
+        borderColor: '#FFE082',
+        borderWidth: 1,
+        borderRadius: 8,
+        padding: 12,
+        marginLeft: 34,
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+    },
+    coreSummaryIcon: {
+        marginRight: 8,
+        marginTop: 2,
+    },
+    coreSummaryText: {
+        fontSize: 13,
+        color: '#B78103',
+        fontWeight: '600',
+        flex: 1,
+        lineHeight: 18,
     },
 });
