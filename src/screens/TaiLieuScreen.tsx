@@ -112,6 +112,63 @@ const KPI_CRITERIA = {
     ]
 };
 
+const CHAT_LUONG_CRITERIA = {
+    title: 'QUY ĐỊNH +/- ĐIỂM CHẤT LƯỢNG 2026',
+    subtitle: 'Là phần đính kèm cho mục 1.4 của Tiêu chí Đánh Giá Nhân viên',
+    meta: 'Rev.1 | Áp dụng: 01-01-2026',
+    section: 'NHÓM CRT & MIX PRODUCT',
+    items: [
+        {
+            id: '4',
+            desc: 'Không bỏ hàng',
+            detail: 'Nhắc nhở ≤ 3 lần/tháng',
+            points: '0'
+        },
+        {
+            id: '5',
+            desc: 'Không bỏ hàng',
+            detail: 'Nhắc nhở > 3 lần/tháng cho CRT, tính theo đơn hàng cho Mix',
+            points: '-0.3'
+        },
+        {
+            id: '6',
+            desc: 'Bỏ hàng - KHÔNG vượt mục tiêu',
+            points: '-0.3',
+            subItems: [
+                { id: '6a', desc: 'Bỏ hàng CRT: không vượt quá 3pcs', points: '-0.3' },
+                { id: '6b', desc: 'Bỏ hàng Mix: không vượt mục tiêu chất lượng, tính theo mỗi purchase/từng dòng sản phẩm', points: '-0.5' }
+            ]
+        },
+        {
+            id: '7',
+            desc: 'Bỏ hàng - VƯỢT mục tiêu',
+            points: '-1',
+            subItems: [
+                { id: '7a', desc: 'Bỏ hàng Mix: vượt mục tiêu chất lượng, tính theo mỗi purchase/từng dòng sản phẩm', points: '-1' },
+                { id: '7b', desc: 'Bỏ hàng CRT > 3pcs mà không vượt quy định số lượng giới hạn của chuyền', points: '-0.6' },
+                {
+                    id: '7c',
+                    desc: 'Bỏ hàng CRT: vượt tỉ lệ quy định dưới đây theo từng chuyền.',
+                    bullets: [
+                        { text: 'Gluing: bỏ hàng từ 8pcs trở lên', points: '-0.6 + Lập Biên bản' },
+                        { text: 'Tin + Solder: bỏ hàng từ 5pcs trở lên', points: '-0.6 + Lập Biên bản' },
+                        { text: 'Lập lại cùng 1 lỗi 3 lần/tháng', points: '-0.6 + Lập Biên bản' }
+                    ],
+                    extraNote: {
+                        text: 'Hàng test điện có điện trở cao/không điện, bị vượt tỉ lệ',
+                        points: 'Trừ đều cho 4 công đoạn: Tin-Solder-Glue-Dập khuôn theo điểm mục (7)'
+                    }
+                }
+            ]
+        },
+        {
+            id: '8',
+            desc: 'Công đoạn sau phát hiện lỗi của công đoạn trước',
+            points: '+0.3'
+        }
+    ]
+};
+
 export default function TaiLieuScreen({ navigation }: any) {
     const [userName, setUserName] = useState('');
     const [userPhone, setUserPhone] = useState('');
@@ -151,6 +208,17 @@ export default function TaiLieuScreen({ navigation }: any) {
                             <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
                         </TouchableOpacity>
                         <Text style={styles.headerTitleLeft}>Tiêu chí đánh giá KPI</Text>
+                    </View>
+                )
+            });
+        } else if (activeSubScreen === 'chatluong') {
+            navigation.setOptions({
+                headerTitleText: (
+                    <View style={styles.headerTitleContainer}>
+                        <TouchableOpacity onPress={() => setActiveSubScreen(null)} style={styles.headerBackButton}>
+                            <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+                        </TouchableOpacity>
+                        <Text style={styles.headerTitleLeft}>Quy định điểm chất lượng</Text>
                     </View>
                 )
             });
@@ -261,6 +329,120 @@ export default function TaiLieuScreen({ navigation }: any) {
         );
     }
 
+    if (activeSubScreen === 'chatluong') {
+        return (
+            <View style={styles.screen}>
+                <ScrollView 
+                    style={styles.subScreenScroll} 
+                    contentContainerStyle={styles.subScreenContent}
+                    showsVerticalScrollIndicator={false}
+                >
+                    {/* Header info */}
+                    <View style={styles.kpiDocHeader}>
+                        <Text style={styles.kpiDocTitle}>{CHAT_LUONG_CRITERIA.title}</Text>
+                        <Text style={styles.kpiDocSubtitle}>{CHAT_LUONG_CRITERIA.subtitle}</Text>
+                        <View style={styles.kpiDocMeta}>
+                            <Text style={styles.kpiDocDate}>{CHAT_LUONG_CRITERIA.meta}</Text>
+                        </View>
+                    </View>
+
+                    {/* Section Header */}
+                    <View style={styles.sectionHeaderContainer}>
+                        <Text style={styles.sectionHeaderText}>{CHAT_LUONG_CRITERIA.section}</Text>
+                    </View>
+
+                    {/* Items List */}
+                    <View style={styles.errorListGroup}>
+                        {CHAT_LUONG_CRITERIA.items.map((item, idx) => {
+                            const isPositive = item.points.startsWith('+');
+                            const isNeutral = item.points === '0';
+                            const pointsColor = isNeutral ? '#8E8E93' : (isPositive ? '#34C759' : '#FF3B30');
+                            const pointsBg = isNeutral ? '#8E8E9315' : (isPositive ? '#34C75915' : '#FF3B3010');
+
+                            return (
+                                <View 
+                                    key={item.id}
+                                    style={[
+                                        styles.clItemRow,
+                                        idx === CHAT_LUONG_CRITERIA.items.length - 1 && styles.clItemRowLast
+                                    ]}
+                                >
+                                    {/* Main Row */}
+                                    <View style={styles.clItemTop}>
+                                        <View style={styles.clItemIdBadge}>
+                                            <Text style={styles.clItemIdText}>{item.id}</Text>
+                                        </View>
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={styles.clItemDesc}>{item.desc}</Text>
+                                            {item.detail && (
+                                                <Text style={styles.clItemDetailText}>{item.detail}</Text>
+                                            )}
+                                        </View>
+                                        <View style={[styles.clPointsBadge, { backgroundColor: pointsBg }]}>
+                                            <Text style={[styles.clPointsText, { color: pointsColor }]}>{item.points}</Text>
+                                        </View>
+                                    </View>
+
+                                    {/* Sub-items if any */}
+                                    {item.subItems && (
+                                        <View style={styles.clSubItemsContainer}>
+                                            {item.subItems.map((sub) => {
+                                                const subIsPositive = sub.points ? sub.points.startsWith('+') : false;
+                                                const subColor = subIsPositive ? '#34C759' : '#FF3B30';
+                                                const subBg = subIsPositive ? '#34C75915' : '#FF3B3010';
+
+                                                return (
+                                                    <View key={sub.id} style={{ marginBottom: 12 }}>
+                                                        <View style={styles.clSubItemRow}>
+                                                            <View style={styles.clSubItemIdBadge}>
+                                                                <Text style={styles.clSubItemIdText}>{sub.id}</Text>
+                                                            </View>
+                                                            <Text style={styles.clSubItemDesc}>{sub.desc}</Text>
+                                                            {sub.points && (
+                                                                <View style={[styles.clPointsBadgeMini, { backgroundColor: subBg }]}>
+                                                                    <Text style={[styles.clPointsTextMini, { color: subColor }]}>{sub.points}</Text>
+                                                                </View>
+                                                            )}
+                                                        </View>
+
+                                                        {/* Bullets & extraNote for 7c */}
+                                                        {sub.bullets && (
+                                                            <View style={styles.clBulletsContainer}>
+                                                                {sub.bullets.map((bullet, bIdx) => (
+                                                                    <View key={bIdx} style={styles.clBulletRow}>
+                                                                        <Text style={styles.clBulletDot}>•</Text>
+                                                                        <Text style={styles.clBulletText}>{bullet.text}</Text>
+                                                                        <View style={styles.clBulletPointsBadge}>
+                                                                            <Text style={styles.clBulletPointsText}>{bullet.points}</Text>
+                                                                        </View>
+                                                                    </View>
+                                                                ))}
+                                                            </View>
+                                                        )}
+
+                                                        {sub.extraNote && (
+                                                            <View style={styles.clExtraNoteBox}>
+                                                                <View style={styles.clExtraNoteTop}>
+                                                                    <Ionicons name="alert-circle" size={16} color="#FF3B30" style={{ marginRight: 6 }} />
+                                                                    <Text style={styles.clExtraNoteTitle}>{sub.extraNote.text}</Text>
+                                                                </View>
+                                                                <Text style={styles.clExtraNoteValue}>{sub.extraNote.points}</Text>
+                                                            </View>
+                                                        )}
+                                                    </View>
+                                                );
+                                            })}
+                                        </View>
+                                    )}
+                                </View>
+                            );
+                        })}
+                    </View>
+                </ScrollView>
+            </View>
+        );
+    }
+
     if (activeSubScreen === 'kpi') {
         return (
             <View style={styles.screen}>
@@ -360,6 +542,11 @@ export default function TaiLieuScreen({ navigation }: any) {
                     <View style={styles.divider} />
                     <TouchableOpacity style={styles.row} onPress={() => setActiveSubScreen('kpi')}>
                         <Text style={styles.label}>Tiêu chí đánh giá KPI</Text>
+                        <Ionicons name="chevron-forward" size={20} color="#C6C6C8" />
+                    </TouchableOpacity>
+                    <View style={styles.divider} />
+                    <TouchableOpacity style={styles.row} onPress={() => setActiveSubScreen('chatluong')}>
+                        <Text style={styles.label}>Quy định cộng trừ điểm chất lượng</Text>
                         <Ionicons name="chevron-forward" size={20} color="#C6C6C8" />
                     </TouchableOpacity>
                 </View>
@@ -692,5 +879,172 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#FF3B30',
         fontWeight: '500',
+    },
+    // Quality Styles
+    sectionHeaderContainer: {
+        marginHorizontal: 16,
+        marginBottom: 8,
+    },
+    sectionHeaderText: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#FF9500',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+    clItemRow: {
+        paddingHorizontal: 16,
+        paddingVertical: 16,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: '#C6C6C8',
+    },
+    clItemRowLast: {
+        borderBottomWidth: 0,
+    },
+    clItemTop: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+    },
+    clItemIdBadge: {
+        backgroundColor: '#E5E5EA',
+        borderRadius: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        marginRight: 10,
+        marginTop: 2,
+    },
+    clItemIdText: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#555555',
+    },
+    clItemDesc: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#000000',
+        lineHeight: 22,
+    },
+    clItemDetailText: {
+        fontSize: 14,
+        color: '#8E8E93',
+        marginTop: 4,
+        lineHeight: 18,
+    },
+    clPointsBadge: {
+        borderRadius: 6,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        marginLeft: 10,
+        minWidth: 44,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 2,
+    },
+    clPointsText: {
+        fontWeight: '700',
+        fontSize: 14,
+    },
+    clSubItemsContainer: {
+        marginTop: 4,
+        paddingLeft: 12,
+    },
+    clSubItemRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginTop: 10,
+        paddingTop: 10,
+    },
+    clSubItemIdBadge: {
+        backgroundColor: '#F2F2F7',
+        borderRadius: 4,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        marginRight: 8,
+        marginTop: 2,
+    },
+    clSubItemIdText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#666666',
+    },
+    clSubItemDesc: {
+        fontSize: 15,
+        color: '#333333',
+        flex: 1,
+        lineHeight: 20,
+    },
+    clPointsBadgeMini: {
+        borderRadius: 4,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        marginLeft: 8,
+        minWidth: 38,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 2,
+    },
+    clPointsTextMini: {
+        fontWeight: '700',
+        fontSize: 12,
+    },
+    clBulletsContainer: {
+        marginTop: 4,
+        paddingLeft: 12,
+    },
+    clBulletRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginTop: 8,
+        paddingLeft: 12,
+    },
+    clBulletDot: {
+        fontSize: 14,
+        color: '#8E8E93',
+        marginRight: 6,
+        marginTop: 1,
+    },
+    clBulletText: {
+        fontSize: 14,
+        color: '#555555',
+        flex: 1,
+        lineHeight: 18,
+    },
+    clBulletPointsBadge: {
+        backgroundColor: '#FF3B3008',
+        borderRadius: 4,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        marginLeft: 8,
+    },
+    clBulletPointsText: {
+        fontSize: 11,
+        color: '#FF3B30',
+        fontWeight: '600',
+    },
+    clExtraNoteBox: {
+        backgroundColor: '#FF3B3005',
+        borderColor: '#FF3B3015',
+        borderWidth: 1,
+        borderRadius: 8,
+        padding: 10,
+        marginTop: 10,
+        marginLeft: 12,
+    },
+    clExtraNoteTop: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    clExtraNoteTitle: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#FF3B30',
+        flex: 1,
+    },
+    clExtraNoteValue: {
+        fontSize: 12,
+        color: '#555555',
+        paddingLeft: 22,
+        lineHeight: 16,
     },
 });
