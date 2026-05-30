@@ -130,7 +130,11 @@ export default function TaiLieuScreen({ navigation }: any) {
                     </View>
                 </View>
 
-                <ScrollView style={styles.subScreenScroll} showsVerticalScrollIndicator={false}>
+                <ScrollView 
+                    style={styles.subScreenScroll} 
+                    contentContainerStyle={styles.subScreenContent}
+                    showsVerticalScrollIndicator={false}
+                >
                     <View style={styles.errorListGroup}>
                         {filteredErrors.map((error, index) => (
                             <View 
@@ -207,7 +211,7 @@ const styles = StyleSheet.create({
     },
     container: {
         paddingTop: 24,
-        paddingBottom: 40,
+        paddingBottom: Platform.OS === 'web' ? 60 : 100,
     },
     userInfoGroup: {
         backgroundColor: '#FFFFFF',
@@ -299,6 +303,9 @@ const styles = StyleSheet.create({
     },
     subScreenScroll: {
         flex: 1,
+    },
+    subScreenContent: {
+        paddingBottom: Platform.OS === 'web' ? 60 : 100,
     },
     errorListGroup: {
         backgroundColor: '#FFFFFF',
