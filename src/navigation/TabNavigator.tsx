@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import NhapLieuScreen from '../screens/NhapLieuScreen';
 import SanLuongScreen from '../screens/SanLuongScreen';
 import CongTuanScreen from '../screens/CongTuanScreen';
-import CaiDatScreen from '../screens/CaiDatScreen';
+import TaiLieuScreen from '../screens/TaiLieuScreen';
 import CustomHeader from '../components/layout/CustomHeader';
 import CustomTabNavigator from '../components/layout/CustomTabNavigator';
 
@@ -74,14 +74,14 @@ export default function TabNavigator() {
         } as any}
       />
       <Tab.Screen
-        name="CaiDat"
-        component={CaiDatScreen}
+        name="TaiLieu"
+        component={TaiLieuScreen}
         options={{
-          title: 'Cài đặt',
-          headerTitleText: 'Cài đặt',
-          tabBarLabel: 'Cài đặt',
+          title: 'Tài liệu',
+          headerTitleText: 'Tài liệu',
+          tabBarLabel: 'Tài liệu',
           tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-            <Ionicons name="settings-outline" size={size} color={color} />
+            <Ionicons name="document-text-outline" size={size} color={color} />
           ),
         } as any}
       />
