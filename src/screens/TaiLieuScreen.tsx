@@ -169,6 +169,38 @@ const CHAT_LUONG_CRITERIA = {
     ]
 };
 
+const CHINH_SACH_CHAT_LUONG = {
+    title: '3 CHÍNH SÁCH CHẤT LƯỢNG',
+    meta: '5 | 27/01/2026',
+    websites: 'estron.dk | linum.dk',
+    policies: [
+        {
+            id: '1',
+            title: 'Chất lượng luôn đặt lên hàng đầu.',
+            desc: 'Luôn cố gắng học hỏi để tìm ra các giải pháp, cải tiến về chất lượng. Tiếp thu và thử nghiệm ý tưởng mới để không ngừng nâng cao chất lượng sản phẩm.',
+            color: '#007AFF',
+            bgColor: '#007AFF08',
+            borderColor: '#007AFF20'
+        },
+        {
+            id: '2',
+            title: 'Đào tạo & giám sát tay nghề nhân viên để đảm bảo chất lượng sản phẩm ổn định và khả năng cung cấp đa dạng.',
+            desc: '',
+            color: '#34C759',
+            bgColor: '#34C75908',
+            borderColor: '#34C75920'
+        },
+        {
+            id: '3',
+            title: 'Cải tiến không ngừng Hệ thống quản lý chất lượng.',
+            desc: '',
+            color: '#FF3B30',
+            bgColor: '#FF3B3008',
+            borderColor: '#FF3B3020'
+        }
+    ]
+};
+
 export default function TaiLieuScreen({ navigation }: any) {
     const [userName, setUserName] = useState('');
     const [userPhone, setUserPhone] = useState('');
@@ -219,6 +251,17 @@ export default function TaiLieuScreen({ navigation }: any) {
                             <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
                         </TouchableOpacity>
                         <Text style={styles.headerTitleLeft}>Quy định điểm chất lượng</Text>
+                    </View>
+                )
+            });
+        } else if (activeSubScreen === 'policy') {
+            navigation.setOptions({
+                headerTitleText: (
+                    <View style={styles.headerTitleContainer}>
+                        <TouchableOpacity onPress={() => setActiveSubScreen(null)} style={styles.headerBackButton}>
+                            <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+                        </TouchableOpacity>
+                        <Text style={styles.headerTitleLeft}>Chính sách chất lượng</Text>
                     </View>
                 )
             });
@@ -443,6 +486,62 @@ export default function TaiLieuScreen({ navigation }: any) {
         );
     }
 
+    if (activeSubScreen === 'policy') {
+        return (
+            <View style={styles.screen}>
+                <ScrollView 
+                    style={styles.subScreenScroll} 
+                    contentContainerStyle={styles.subScreenContent}
+                    showsVerticalScrollIndicator={false}
+                >
+                    {/* Header info */}
+                    <View style={styles.kpiDocHeader}>
+                        <Text style={styles.kpiDocTitle}>{CHINH_SACH_CHAT_LUONG.title}</Text>
+                        <View style={styles.kpiDocMeta}>
+                            <Text style={styles.kpiDocDate}>{CHINH_SACH_CHAT_LUONG.meta}</Text>
+                            <Text style={styles.kpiDocDate}>{CHINH_SACH_CHAT_LUONG.websites}</Text>
+                        </View>
+                    </View>
+
+                    {/* Big stylized number 3 header area */}
+                    <View style={styles.policyLogoCard}>
+                        <View style={styles.policyLogoCircle}>
+                            <Text style={styles.policyLogoNumber}>3</Text>
+                        </View>
+                        <Text style={styles.policyLogoText}>CHÍNH SÁCH CHẤT LƯỢNG CỦA ESTRON</Text>
+                    </View>
+
+                    {/* Policy items */}
+                    <View style={{ paddingHorizontal: 16 }}>
+                        {CHINH_SACH_CHAT_LUONG.policies.map((p) => (
+                            <View 
+                                key={p.id} 
+                                style={[
+                                    styles.policyCard, 
+                                    { backgroundColor: p.bgColor, borderColor: p.borderColor }
+                                ]}
+                            >
+                                <View style={styles.policyCardTop}>
+                                    <View style={[styles.policyIdBadge, { backgroundColor: p.color }]}>
+                                        <Text style={styles.policyIdText}>{p.id}</Text>
+                                    </View>
+                                    <Text style={[styles.policyCardTitleText, { color: p.color }]}>
+                                        {p.title}
+                                    </Text>
+                                </View>
+                                {p.desc.length > 0 && (
+                                    <Text style={[styles.policyCardDescText, { color: p.color + 'BF' }]}>
+                                        {p.desc}
+                                    </Text>
+                                )}
+                            </View>
+                        ))}
+                    </View>
+                </ScrollView>
+            </View>
+        );
+    }
+
     if (activeSubScreen === 'kpi') {
         return (
             <View style={styles.screen}>
@@ -547,6 +646,11 @@ export default function TaiLieuScreen({ navigation }: any) {
                     <View style={styles.divider} />
                     <TouchableOpacity style={styles.row} onPress={() => setActiveSubScreen('chatluong')}>
                         <Text style={styles.label}>Quy định cộng trừ điểm chất lượng</Text>
+                        <Ionicons name="chevron-forward" size={20} color="#C6C6C8" />
+                    </TouchableOpacity>
+                    <View style={styles.divider} />
+                    <TouchableOpacity style={styles.row} onPress={() => setActiveSubScreen('policy')}>
+                        <Text style={styles.label}>Chính sách chất lượng</Text>
                         <Ionicons name="chevron-forward" size={20} color="#C6C6C8" />
                     </TouchableOpacity>
                 </View>
@@ -1046,5 +1150,83 @@ const styles = StyleSheet.create({
         color: '#555555',
         paddingLeft: 22,
         lineHeight: 16,
+    },
+    // Policy Styles
+    policyLogoCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        marginHorizontal: 16,
+        paddingVertical: 24,
+        paddingHorizontal: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#E5E5EA',
+    },
+    policyLogoCircle: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: '#F2F2F7',
+        borderWidth: 4,
+        borderColor: '#007AFF',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+        elevation: 3,
+    },
+    policyLogoNumber: {
+        fontSize: 40,
+        fontWeight: '900',
+        color: '#007AFF',
+    },
+    policyLogoText: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#8E8E93',
+        letterSpacing: 1,
+        textAlign: 'center',
+    },
+    policyCard: {
+        borderRadius: 10,
+        padding: 16,
+        marginBottom: 16,
+        borderWidth: 1,
+    },
+    policyCardTop: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+    },
+    policyIdBadge: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 10,
+        marginTop: 2,
+    },
+    policyIdText: {
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '700',
+    },
+    policyCardTitleText: {
+        fontSize: 16,
+        fontWeight: '700',
+        flex: 1,
+        lineHeight: 22,
+    },
+    policyCardDescText: {
+        fontSize: 14,
+        marginTop: 8,
+        paddingLeft: 34,
+        lineHeight: 20,
+        fontWeight: '500',
     },
 });
