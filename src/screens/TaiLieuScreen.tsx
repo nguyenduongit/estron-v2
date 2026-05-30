@@ -26,6 +26,92 @@ const SOLDER_ERRORS = [
     { code: '17.2', desc: 'Dư hàng.' },
 ];
 
+const KPI_CRITERIA = {
+    title: 'TIÊU CHÍ & ĐIỂM ĐÁNH GIÁ HIỆU QUẢ - TRÁCH NHIỆM CÔNG VIỆC',
+    subtitle: 'CỦA NHÂN VIÊN KHỐI SẢN XUẤT NĂM 2026',
+    appliedDate: 'Áp dụng: 01-01-2026',
+    totalScore: 65,
+    categories: [
+        {
+            id: '1',
+            name: '1. Chất lượng công việc hoặc sản phẩm',
+            maxPoints: 25,
+            items: [
+                { id: '1.1', desc: 'Mục tiêu chất lượng của chuyền', points: 4 },
+                { id: '1.2', desc: 'Khiếu nại từ khách hàng (IQA)', points: 2, note: 'Điểm tính trên 1 lần phát sinh & có ảnh hưởng trực tiếp' },
+                { id: '1.3', desc: 'Vượt trội 6 tháng liên tiếp không có lỗi chất lượng', points: 3 },
+                { id: '1.4', desc: 'Lỗi chất lượng', points: 14, note: 'Căn cứ theo bảng quy định +/- điểm đánh giá chất lượng' },
+                {
+                    id: '1.5',
+                    desc: 'Tổng công tham gia sản xuất ở các công đoạn điều chuyển (khác nhóm, khác dòng sản phẩm).',
+                    example: 'Lưu ý: Nhóm Mix: chỉ áp dụng cho Tin-Solder-Glue-SWH. (Tinning cho sản phẩm Linum&N-ear được tính chung là 1 dòng sản phẩm)',
+                    points: 2
+                },
+                { id: '1.5a', desc: 'Tổng công/năm >30 công & đạt đủ sản lượng & chất lượng.', points: 2 },
+                { id: '1.5b', desc: 'Tổng công/năm 5.5 đến 30 công & đạt đủ sản lượng & chất lượng.', points: 1 }
+            ]
+        },
+        {
+            id: '2',
+            name: '2. Tuân thủ quy trình làm việc & Thông tin liên quan',
+            maxPoints: 15,
+            items: [
+                {
+                    id: '2.1',
+                    desc: 'Hiểu rõ thông tin, yêu cầu công việc và thực hiện đúng theo quy trình hướng dẫn',
+                    example: 'Ví dụ: Ghi lộn phiếu, ghi sai phiếu, giao hàng trễ, nhầm hộp, nhầm size, quên báo sản lượng, sai ống keo, sai số máy sấy,...',
+                    points: 15,
+                    note: '-0.5/lần'
+                }
+            ]
+        },
+        {
+            id: '3',
+            name: '3. Nội quy - An toàn lao động',
+            maxPoints: 10,
+            items: [
+                {
+                    id: '3.1',
+                    desc: 'Gọn gàng, ngăn nắp trước, trong & sau khi làm việc.',
+                    example: 'Ví dụ: lau dọn bàn, ghế xếp gọn, trùm kính+máy, vị trí để hàng, chỉ để những vật dụng cần thiết phục vụ cho sản xuất trên khu vực bàn làm việc',
+                    points: 4,
+                    note: '-0.5/lần'
+                },
+                { id: '3.2', desc: 'Bảo quản trang thiết bị, công cụ dụng cụ sạch sẽ, không gây hư hỏng.', points: 3, note: '-0.5/lần' },
+                {
+                    id: '3.3',
+                    desc: 'Tự giác chấp hành tốt nội quy công ty/quy định về an toàn lao động.',
+                    example: 'Ví dụ: tắt đèn, khí, máy, ra vào ca đúng giờ, tiếng ồn...',
+                    points: 3,
+                    note: '-0.5/lần'
+                }
+            ]
+        },
+        {
+            id: '4',
+            name: '4. Tinh thần trách nhiệm & Hợp tác',
+            maxPoints: 15,
+            items: [
+                {
+                    id: '4.1',
+                    desc: 'Tích cực, chủ động, có trách nhiệm',
+                    example: 'Ví dụ: không chủ động, không tương tác trong công việc...',
+                    points: 9,
+                    note: '-1/lần'
+                },
+                { id: '4.2', desc: 'Tuân theo điều động của cấp trên', points: 3, note: '-1/lần' },
+                {
+                    id: '4.3',
+                    desc: 'Đoàn kết, hỗ trợ, giúp đỡ đồng nghiệp khi cần',
+                    example: 'Ví dụ: không tham gia hoạt động chung của chuyền hoặc công ty, không hỗ trợ đồng nghiệp...',
+                    points: 3,
+                    note: '-1/lần'
+                }
+            ]
+        }
+    ]
+};
+
 export default function TaiLieuScreen({ navigation }: any) {
     const [userName, setUserName] = useState('');
     const [userPhone, setUserPhone] = useState('');
@@ -54,6 +140,17 @@ export default function TaiLieuScreen({ navigation }: any) {
                             <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
                         </TouchableOpacity>
                         <Text style={styles.headerTitleLeft}>Tra cứu mã lỗi Solder</Text>
+                    </View>
+                )
+            });
+        } else if (activeSubScreen === 'kpi') {
+            navigation.setOptions({
+                headerTitleText: (
+                    <View style={styles.headerTitleContainer}>
+                        <TouchableOpacity onPress={() => setActiveSubScreen(null)} style={styles.headerBackButton}>
+                            <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+                        </TouchableOpacity>
+                        <Text style={styles.headerTitleLeft}>Tiêu chí đánh giá KPI</Text>
                     </View>
                 )
             });
@@ -164,6 +261,76 @@ export default function TaiLieuScreen({ navigation }: any) {
         );
     }
 
+    if (activeSubScreen === 'kpi') {
+        return (
+            <View style={styles.screen}>
+                <ScrollView 
+                    style={styles.subScreenScroll} 
+                    contentContainerStyle={styles.subScreenContent}
+                    showsVerticalScrollIndicator={false}
+                >
+                    {/* Header info */}
+                    <View style={styles.kpiDocHeader}>
+                        <Text style={styles.kpiDocTitle}>{KPI_CRITERIA.title}</Text>
+                        <Text style={styles.kpiDocSubtitle}>{KPI_CRITERIA.subtitle}</Text>
+                        <View style={styles.kpiDocMeta}>
+                            <Text style={styles.kpiDocDate}>{KPI_CRITERIA.appliedDate}</Text>
+                            <View style={styles.totalBadge}>
+                                <Text style={styles.totalBadgeLabel}>Tổng điểm:</Text>
+                                <Text style={styles.totalBadgeValue}>{KPI_CRITERIA.totalScore}đ</Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Categories */}
+                    {KPI_CRITERIA.categories.map((category) => (
+                        <View key={category.id} style={styles.kpiCard}>
+                            <View style={styles.kpiCardHeader}>
+                                <Text style={styles.kpiCardTitle}>{category.name}</Text>
+                                <View style={styles.kpiCardPointsBadge}>
+                                    <Text style={styles.kpiCardPointsText}>{category.maxPoints}đ</Text>
+                                </View>
+                            </View>
+                            
+                            <View style={styles.kpiCardBody}>
+                                {category.items.map((item, idx) => (
+                                    <View 
+                                        key={item.id} 
+                                        style={[
+                                            styles.kpiItemRow,
+                                            idx === category.items.length - 1 && styles.kpiItemRowLast
+                                        ]}
+                                    >
+                                        <View style={styles.kpiItemTop}>
+                                            <View style={styles.kpiItemIdBadge}>
+                                                <Text style={styles.kpiItemIdText}>{item.id}</Text>
+                                            </View>
+                                            <Text style={styles.kpiItemDesc}>{item.desc}</Text>
+                                            <View style={styles.kpiItemPoints}>
+                                                <Text style={styles.kpiItemPointsText}>{item.points}đ</Text>
+                                            </View>
+                                        </View>
+
+                                        {item.example && (
+                                            <Text style={styles.kpiItemExample}>{item.example}</Text>
+                                        )}
+
+                                        {item.note && (
+                                            <View style={styles.kpiItemNoteBox}>
+                                                <Ionicons name="alert-circle-outline" size={14} color="#FF3B30" style={{ marginRight: 4 }} />
+                                                <Text style={styles.kpiItemNoteText}>{item.note}</Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                ))}
+                            </View>
+                        </View>
+                    ))}
+                </ScrollView>
+            </View>
+        );
+    }
+
     return (
         <View style={styles.screen}>
             <ScrollView 
@@ -188,6 +355,11 @@ export default function TaiLieuScreen({ navigation }: any) {
                 <View style={styles.userInfoGroup}>
                     <TouchableOpacity style={styles.row} onPress={() => { setSearchQuery(''); setActiveSubScreen('solder'); }}>
                         <Text style={styles.label}>Tra cứu mã lỗi Solder</Text>
+                        <Ionicons name="chevron-forward" size={20} color="#C6C6C8" />
+                    </TouchableOpacity>
+                    <View style={styles.divider} />
+                    <TouchableOpacity style={styles.row} onPress={() => setActiveSubScreen('kpi')}>
+                        <Text style={styles.label}>Tiêu chí đánh giá KPI</Text>
                         <Ionicons name="chevron-forward" size={20} color="#C6C6C8" />
                     </TouchableOpacity>
                 </View>
@@ -354,5 +526,171 @@ const styles = StyleSheet.create({
         color: '#8E8E93',
         fontSize: 16,
         marginTop: 8,
+    },
+    // KPI Styles
+    kpiDocHeader: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        marginHorizontal: 16,
+        marginTop: 16,
+        padding: 16,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#E5E5EA',
+    },
+    kpiDocTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#007AFF',
+        textAlign: 'center',
+        lineHeight: 22,
+    },
+    kpiDocSubtitle: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#333333',
+        textAlign: 'center',
+        marginTop: 6,
+        lineHeight: 18,
+    },
+    kpiDocMeta: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 12,
+        paddingTop: 12,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: '#C6C6C8',
+    },
+    kpiDocDate: {
+        fontSize: 12,
+        color: '#8E8E93',
+        fontStyle: 'italic',
+    },
+    totalBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#34C75915',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+    },
+    totalBadgeLabel: {
+        fontSize: 13,
+        color: '#34C759',
+        fontWeight: '500',
+        marginRight: 4,
+    },
+    totalBadgeValue: {
+        fontSize: 13,
+        color: '#34C759',
+        fontWeight: '700',
+    },
+    kpiCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        marginHorizontal: 16,
+        marginBottom: 16,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#E5E5EA',
+    },
+    kpiCardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        backgroundColor: '#F9F9F9',
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: '#C6C6C8',
+    },
+    kpiCardTitle: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#000000',
+        flex: 1,
+        marginRight: 8,
+    },
+    kpiCardPointsBadge: {
+        backgroundColor: '#FF950015',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+    },
+    kpiCardPointsText: {
+        color: '#FF9500',
+        fontWeight: '700',
+        fontSize: 13,
+    },
+    kpiCardBody: {
+        paddingHorizontal: 16,
+    },
+    kpiItemRow: {
+        paddingVertical: 14,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: '#E5E5EA',
+    },
+    kpiItemRowLast: {
+        borderBottomWidth: 0,
+    },
+    kpiItemTop: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+    },
+    kpiItemIdBadge: {
+        backgroundColor: '#F2F2F7',
+        borderRadius: 4,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        marginRight: 8,
+        marginTop: 2,
+    },
+    kpiItemIdText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#555555',
+    },
+    kpiItemDesc: {
+        fontSize: 15,
+        color: '#333333',
+        flex: 1,
+        lineHeight: 20,
+    },
+    kpiItemPoints: {
+        backgroundColor: '#007AFF10',
+        borderRadius: 4,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        marginLeft: 8,
+        marginTop: 2,
+    },
+    kpiItemPointsText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#007AFF',
+    },
+    kpiItemExample: {
+        fontSize: 13,
+        color: '#8E8E93',
+        marginTop: 6,
+        paddingLeft: 32,
+        lineHeight: 18,
+    },
+    kpiItemNoteBox: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FF3B3008',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 4,
+        marginTop: 6,
+        marginLeft: 32,
+        alignSelf: 'flex-start',
+    },
+    kpiItemNoteText: {
+        fontSize: 12,
+        color: '#FF3B30',
+        fontWeight: '500',
     },
 });
