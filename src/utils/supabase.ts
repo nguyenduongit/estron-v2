@@ -161,3 +161,110 @@ export const saveUserData = async (user: { id: string, name: string, phone: stri
         }
     }
 };
+
+/**
+ * Lấy lịch trình làm việc tháng (lich_trinh_thang) của người dùng
+ * Nếu chưa có, tự động sinh ra lịch trình mặc định
+ */
+export const fetchMonthlySchedule = async (
+    userId: string,
+    estronYear: number,
+    estronMonth: number,
+    startDate: Date,
+    endDate: Date
+) => {
+    if (!userId) return null;
+    
+    const estronMonthStr = `${estronYear}-${String(estronMonth).padStart(2, '0')}`;
+    const url = `${SUPABASE_URL}/lich_trinh_thang?user_id=eq.${userId}&estron_month=eq.${estronMonthStr}`;
+    
+    try {
+        const res = await fetch(url, {
+            method: 'GET',
+            headers: getHeaders()
+        });
+        
+        if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(errText);
+        }
+        
+        const data = await res.json();
+        if (data.length > 0) {
+            return data[0].schedule_data;
+        }
+        
+        // Sinh lịch trình mặc định nếu chưa có
+        const defaultSchedule = generateDefaultSchedule(startDate, endDate);
+        await saveMonthlySchedule(userId, estronYear, estronMonth, defaultSchedule);
+        return defaultSchedule;
+    } catch (error) {
+        console.error("fetchMonthlySchedule error:", error);
+        return null;
+    }
+};
+
+/**
+ * Sinh ra lịch trình làm việc mặc định
+ * T2-T6: 480 phút, T7: 240 phút, CN: "Nghỉ"
+ */
+const generateDefaultSchedule = (startDate: Date, endDate: Date) => {
+    const schedule: Record<string, number | string> = {};
+    let current = new Date(startDate);
+    
+    while (current <= endDate) {
+        const yyyy = current.getFullYear();
+        const mm = String(current.getMonth() + 1).padStart(2, '0');
+        const dd = String(current.getDate()).padStart(2, '0');
+        const dateStr = `${yyyy}-${mm}-${dd}`;
+        
+        const dayOfWeek = current.getDay(); // 0: Sun, 1: Mon, ..., 6: Sat
+        if (dayOfWeek === 0) {
+            schedule[dateStr] = "Nghỉ";
+        } else if (dayOfWeek === 6) {
+            schedule[dateStr] = 240;
+        } else {
+            schedule[dateStr] = 480;
+        }
+        
+        current.setDate(current.getDate() + 1);
+    }
+    return schedule;
+};
+
+/**
+ * Lưu lịch trình làm việc tháng (lich_trinh_thang) của người dùng
+ */
+export const saveMonthlySchedule = async (
+    userId: string,
+    estronYear: number,
+    estronMonth: number,
+    scheduleData: Record<string, number | string>
+) => {
+    if (!userId) throw new Error("Thông tin người dùng không hợp lệ");
+    
+    const estronMonthStr = `${estronYear}-${String(estronMonth).padStart(2, '0')}`;
+    const url = `${SUPABASE_URL}/lich_trinh_thang?on_conflict=user_id,estron_month`;
+    
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: getHeaders({
+                'Prefer': 'resolution=merge-duplicates'
+            }),
+            body: JSON.stringify({
+                user_id: userId,
+                estron_month: estronMonthStr,
+                schedule_data: scheduleData
+            })
+        });
+        
+        if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(errText);
+        }
+    } catch (error) {
+        console.error("saveMonthlySchedule error:", error);
+        throw error;
+    }
+};
