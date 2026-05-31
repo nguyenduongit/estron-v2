@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable, Modal, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable, Modal, TextInput, TouchableOpacity, Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchUserData, saveUserData } from '../utils/supabase';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -157,7 +157,11 @@ export default function SanLuongScreen() {
 
         const newValue = Number(editValue);
         if (isNaN(newValue)) {
-            Alert.alert("Lỗi", "Vui lòng nhập số hợp lệ");
+            if (Platform.OS === 'web') {
+                alert("Vui lòng nhập số hợp lệ");
+            } else {
+                Alert.alert("Lỗi", "Vui lòng nhập số hợp lệ");
+            }
             return;
         }
 
@@ -188,50 +192,67 @@ export default function SanLuongScreen() {
             loadData();
         } catch (e) {
             console.error(e);
-            Alert.alert("Lỗi", "Không thể cập nhật dữ liệu");
+            if (Platform.OS === 'web') {
+                alert("Không thể cập nhật dữ liệu");
+            } else {
+                Alert.alert("Lỗi", "Không thể cập nhật dữ liệu");
+            }
+            setLoading(false);
+        }
+    };
+
+    const performDelete = async () => {
+        if (!fullUserData || !editingItem) return;
+        const dateStr = editingItem.day.dateStr;
+        const updatedUserData = { ...fullUserData };
+
+        if (editingItem.type === 'sanluong') {
+            const filtered = updatedUserData.nangSuat[dateStr].sanLuong.filter(
+                (i: any) => i.maCongDoan !== editingItem.item.maCongDoan
+            );
+            updatedUserData.nangSuat[dateStr].sanLuong = filtered;
+        } else {
+            updatedUserData.nangSuat[dateStr].thoiGianHoTro = 0;
+        }
+
+        try {
+            setLoading(true);
+            const userString = await AsyncStorage.getItem('user');
+            const user = JSON.parse(userString!);
+            await saveUserData(user, updatedUserData);
+            setEditModalVisible(false);
+            loadData();
+        } catch (e) {
+            console.error(e);
+            if (Platform.OS === 'web') {
+                alert("Không thể xóa dữ liệu");
+            } else {
+                Alert.alert("Lỗi", "Không thể xóa dữ liệu");
+            }
             setLoading(false);
         }
     };
 
     const handleDelete = () => {
-        Alert.alert(
-            "Xác nhận xóa",
-            "Bạn có chắc chắn muốn xóa dữ liệu này không?",
-            [
-                { text: "Hủy", style: "cancel" },
-                {
-                    text: "Xóa",
-                    style: "destructive",
-                    onPress: async () => {
-                        if (!fullUserData || !editingItem) return;
-                        const dateStr = editingItem.day.dateStr;
-                        const updatedUserData = { ...fullUserData };
-
-                        if (editingItem.type === 'sanluong') {
-                            const filtered = updatedUserData.nangSuat[dateStr].sanLuong.filter(
-                                (i: any) => i.maCongDoan !== editingItem.item.maCongDoan
-                            );
-                            updatedUserData.nangSuat[dateStr].sanLuong = filtered;
-                        } else {
-                            updatedUserData.nangSuat[dateStr].thoiGianHoTro = 0;
-                        }
-
-                        try {
-                            setLoading(true);
-                            const userString = await AsyncStorage.getItem('user');
-                            const user = JSON.parse(userString!);
-                            await saveUserData(user, updatedUserData);
-                            setEditModalVisible(false);
-                            loadData();
-                        } catch (e) {
-                            console.error(e);
-                            Alert.alert("Lỗi", "Không thể xóa dữ liệu");
-                            setLoading(false);
-                        }
+        if (Platform.OS === 'web') {
+            const confirmed = window.confirm("Bạn có chắc chắn muốn xóa dữ liệu này không?");
+            if (confirmed) {
+                performDelete();
+            }
+        } else {
+            Alert.alert(
+                "Xác nhận xóa",
+                "Bạn có chắc chắn muốn xóa dữ liệu này không?",
+                [
+                    { text: "Hủy", style: "cancel" },
+                    {
+                        text: "Xóa",
+                        style: "destructive",
+                        onPress: performDelete
                     }
-                }
-            ]
-        );
+                ]
+            );
+        }
     };
 
     return (
