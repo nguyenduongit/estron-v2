@@ -17,44 +17,6 @@ interface SwipeableScreenWrapperProps {
   disabled?: boolean;
 }
 
-function SwipeableScreenWrapper({ children, routeName, disabled = false }: SwipeableScreenWrapperProps) {
-  const panResponder = React.useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (evt, gestureState) => {
-        if (disabled) return false;
-        const { dx, dy } = gestureState;
-        // Only trigger swipe if horizontal movement is significant (50px) and dominant over vertical scrolling
-        return Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 2;
-      },
-      onPanResponderRelease: (evt, gestureState) => {
-        if (disabled) return;
-        const { dx } = gestureState;
-        const currentIndex = TAB_ROUTES.indexOf(routeName);
-        
-        if (dx < -50) {
-          // Swipe left (finger moves right to left) -> Next tab
-          if (currentIndex < TAB_ROUTES.length - 1) {
-            evt.currentTarget.dispatchEvent ? evt.currentTarget.dispatchEvent(new CustomEvent('tabNavigate', { detail: TAB_ROUTES[currentIndex + 1] })) : null;
-            // Fallback for native/navigation context
-            const navState = (evt as any)._targetInst?.stateNode;
-          }
-        } else if (dx > 50) {
-          // Swipe right (finger moves left to right) -> Previous tab
-          if (currentIndex > 0) {
-            evt.currentTarget.dispatchEvent ? evt.currentTarget.dispatchEvent(new CustomEvent('tabNavigate', { detail: TAB_ROUTES[currentIndex - 1] })) : null;
-          }
-        }
-      },
-    })
-  ).current;
-
-  // Let's implement navigation callback via useNavigation which is standard in React Navigation
-  return (
-    <View style={{ flex: 1 }} {...panResponder.panHandlers}>
-      {children}
-    </View>
-  );
-}
 
 // Better yet, use navigation directly inside the functional wrapper:
 function SwipeableNavigationWrapper({ children, routeName, disabled = false, navigation }: SwipeableScreenWrapperProps & { navigation: any }) {
