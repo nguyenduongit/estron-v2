@@ -4,10 +4,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
-import { fetchUserData, saveUserData } from '../utils/supabase';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { fetchUserData, saveUserData, fetchMonthlySchedule } from '../utils/supabase';
 import { getEstronMonthRange, formatLocalDateStr, getLocalISOString } from '../utils/dateUtils';
-import { getScheduleSettings, getTargetMinutesForDate, ScheduleSettings, DEFAULT_SCHEDULE } from '../utils/schedule';
 
 interface CongDoan {
     maCongDoan: string;
@@ -15,33 +14,19 @@ interface CongDoan {
 }
 
 export default function NhapLieuScreen() {
+    const navigation = useNavigation<any>();
     const [user, setUser] = useState<any>(null);
     const [date, setDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
-
-    // Schedule Settings State
-    const [scheduleSettings, setScheduleSettings] = useState<ScheduleSettings>(DEFAULT_SCHEDULE);
-
-    useFocusEffect(
-        useCallback(() => {
-            const loadSchedule = async () => {
-                const s = await getScheduleSettings();
-                setScheduleSettings(s);
-            };
-            loadSchedule();
-        }, [])
-    );
-
-    const getDefaultThucHien = useCallback((d: Date) => {
-        return getTargetMinutesForDate(d, scheduleSettings).toString();
-    }, [scheduleSettings]);
 
     // User Data State
     const [danhSachCongDoan, setDanhSachCongDoan] = useState<CongDoan[]>([]);
     const [maCongDoan, setMaCongDoan] = useState('');
     const [soLuong, setSoLuong] = useState('');
-    const [thoiGianThucHien, setThoiGianThucHien] = useState(getTargetMinutesForDate(new Date(), DEFAULT_SCHEDULE).toString());
+    
+    // Support time and monthly schedule states
     const [thoiGianHoTro, setThoiGianHoTro] = useState('0');
+    const [monthlySchedule, setMonthlySchedule] = useState<Record<string, number | string>>({});
 
     const [isSaving, setIsSaving] = useState(false);
     const [isLoadingData, setIsLoadingData] = useState(true);
@@ -52,26 +37,6 @@ export default function NhapLieuScreen() {
     const [newMa, setNewMa] = useState('');
     const [newDinhMuc, setNewDinhMuc] = useState('');
 
-
-
-    useEffect(() => {
-        const defaultThucHien = getDefaultThucHien(date);
-        if (fullData && fullData.nangSuat) {
-            const dateStr = formatLocalDateStr(date);
-            const dataForDate = fullData.nangSuat[dateStr];
-            if (dataForDate) {
-                setThoiGianThucHien(dataForDate.thoiGianThucHien !== undefined ? dataForDate.thoiGianThucHien.toString() : defaultThucHien);
-                setThoiGianHoTro(dataForDate.thoiGianHoTro !== undefined ? dataForDate.thoiGianHoTro.toString() : '0');
-            } else {
-                setThoiGianThucHien(defaultThucHien);
-                setThoiGianHoTro('0');
-            }
-        } else {
-            setThoiGianThucHien(defaultThucHien);
-            setThoiGianHoTro('0');
-        }
-    }, [date, fullData, getDefaultThucHien]);
-
     const loadUserData = useCallback(async (targetDate: Date) => {
         setIsLoadingData(true);
         try {
@@ -81,6 +46,14 @@ export default function NhapLieuScreen() {
                 setUser(u);
 
                 const data: any = await fetchUserData(u, targetDate);
+                
+                // Fetch monthly schedule config
+                const { startDate, endDate, estronMonth, estronYear } = getEstronMonthRange(targetDate);
+                const sched = await fetchMonthlySchedule(u.id, estronYear, estronMonth, startDate, endDate);
+                if (sched) {
+                    setMonthlySchedule(sched);
+                }
+
                 if (data) {
                     if (data.sanLuong && !data.nangSuat) {
                         data.nangSuat = {};
@@ -103,7 +76,6 @@ export default function NhapLieuScreen() {
                         }
                     }
                 } else {
-                    // Initialize empty data
                     const initialData = { congDoan: [], nangSuat: {} };
                     setFullData(initialData);
                 }
@@ -118,9 +90,69 @@ export default function NhapLieuScreen() {
     const { estronMonth, estronYear } = getEstronMonthRange(date);
     const estronMonthKey = `${estronYear}-${estronMonth}`;
 
+    // Reload when screen gains focus or month changes
+    useFocusEffect(
+        useCallback(() => {
+            loadUserData(date);
+        }, [estronMonthKey, loadUserData])
+    );
+
+    // Load initial support time from DB when selected date changes
     useEffect(() => {
-        loadUserData(date);
-    }, [estronMonthKey, loadUserData]);
+        const dateStr = formatLocalDateStr(date);
+        if (fullData && fullData.nangSuat && fullData.nangSuat[dateStr]) {
+            const dataForDate = fullData.nangSuat[dateStr];
+            setThoiGianHoTro(dataForDate.thoiGianHoTro !== undefined ? dataForDate.thoiGianHoTro.toString() : '0');
+        } else {
+            setThoiGianHoTro('0');
+        }
+    }, [date, fullData]);
+
+    // Derive calculated thoiGianThucHien = (Scheduled working minutes) - (Support minutes)
+    const getCalculatedThucHien = () => {
+        const dateStr = formatLocalDateStr(date);
+        let scheduledMins = 480; // default fallback
+        
+        if (monthlySchedule && monthlySchedule[dateStr] !== undefined) {
+            const val = monthlySchedule[dateStr];
+            scheduledMins = val === 'Nghỉ' ? 0 : Number(val);
+        } else {
+            // Fallback defaults
+            const dayOfWeek = date.getDay();
+            if (dayOfWeek === 0) scheduledMins = 0;
+            else if (dayOfWeek === 6) scheduledMins = 240;
+            else scheduledMins = 480;
+        }
+
+        const supportMins = Number(thoiGianHoTro) || 0;
+        return Math.max(0, scheduledMins - supportMins);
+    };
+
+    const thoiGianThucHien = getCalculatedThucHien();
+
+    const showToast = () => {
+        const message = "Thời gian thực hiện được tính tự động từ Lịch trình tháng. Vui lòng chỉnh sửa trong Lịch trình tháng.";
+        if (Platform.OS === 'web') {
+            const goToSchedule = window.confirm(message + "\n\nBạn có muốn di chuyển đến Lịch trình tháng?");
+            if (goToSchedule) {
+                navigation.navigate('SanLuong', { openSchedule: true });
+            }
+        } else {
+            Alert.alert(
+                "Thông báo",
+                message,
+                [
+                    { text: "Hủy", style: "cancel" },
+                    { 
+                        text: "Đến Lịch trình tháng", 
+                        onPress: () => {
+                            navigation.navigate('SanLuong', { openSchedule: true });
+                        }
+                    }
+                ]
+            );
+        }
+    };
 
     const handleSaveNewCongDoan = async () => {
         if (!newMa || !newDinhMuc) {
@@ -139,11 +171,9 @@ export default function NhapLieuScreen() {
         setDanhSachCongDoan(updatedList);
         setMaCongDoan(newCd.maCongDoan);
 
-        // Update full data
         const updatedData = { ...fullData, congDoan: updatedList };
         setFullData(updatedData);
 
-        // Save immediately to Blob
         try {
             await saveUserData(user, updatedData);
         } catch (e) {
@@ -173,7 +203,7 @@ export default function NhapLieuScreen() {
                 nangSuat: {
                     ...(fullData?.nangSuat || {}),
                     [dateStr]: {
-                        thoiGianThucHien: thoiGianThucHien === '' ? Number(getDefaultThucHien(date)) : Number(thoiGianThucHien),
+                        thoiGianThucHien: thoiGianThucHien,
                         thoiGianHoTro: thoiGianHoTro === '' ? 0 : Number(thoiGianHoTro),
                         sanLuong: [
                             ...(fullData?.nangSuat?.[dateStr]?.sanLuong || []),
@@ -332,21 +362,16 @@ export default function NhapLieuScreen() {
                     {/* Thời gian thực hiện */}
                     <View style={styles.row}>
                         <Text style={styles.label}>Thời gian thực hiện</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={thoiGianThucHien}
-                            onChangeText={setThoiGianThucHien}
-                            placeholder="Nhập phút"
-                            placeholderTextColor="#C7C7CC"
-                            keyboardType="numeric"
-                            returnKeyType="done"
-                            onFocus={() => {
-                                if (thoiGianThucHien === getDefaultThucHien(date)) setThoiGianThucHien('');
-                            }}
-                            onBlur={() => {
-                                if (thoiGianThucHien.trim() === '') setThoiGianThucHien(getDefaultThucHien(date));
-                            }}
-                        />
+                        <TouchableOpacity onPress={showToast} style={styles.valueContainer}>
+                            <TextInput
+                                style={[styles.input, { color: '#8E8E93' }]}
+                                value={thoiGianThucHien.toString()}
+                                placeholder="Nhập phút"
+                                placeholderTextColor="#C7C7CC"
+                                editable={false}
+                                pointerEvents="none"
+                            />
+                        </TouchableOpacity>
                     </View>
 
                     <View style={styles.divider} />

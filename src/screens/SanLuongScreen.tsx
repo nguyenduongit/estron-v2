@@ -2,13 +2,14 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable, Modal, TextInput, TouchableOpacity, Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchUserData, saveUserData, fetchMonthlySchedule } from '../utils/supabase';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { getEstronMonthRange, getEstronDays } from '../utils/dateUtils';
 import { Ionicons } from '@expo/vector-icons';
 import LichTrinhScreen from './LichTrinhScreen';
 
 export default function SanLuongScreen() {
     const navigation = useNavigation<any>();
+    const route = useRoute<any>();
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState<any[]>([]);
     const [fullUserData, setFullUserData] = useState<any>(null);
@@ -158,7 +159,11 @@ export default function SanLuongScreen() {
     useFocusEffect(
         useCallback(() => {
             loadData();
-        }, [loadData])
+            if (route.params?.openSchedule) {
+                setShowLichTrinhModal(true);
+                navigation.setParams({ openSchedule: undefined });
+            }
+        }, [loadData, route.params?.openSchedule, navigation])
     );
 
     const openEditModal = (day: any, item: any, type: 'sanluong' | 'hotro') => {
