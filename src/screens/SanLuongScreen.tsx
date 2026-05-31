@@ -52,7 +52,7 @@ export default function SanLuongScreen() {
                     const dayData = nangSuat[dateStr];
                     const sanLuong = dayData?.sanLuong || [];
                     const hasData = dayData !== undefined;
-                    
+
                     const [yyyy, mm, dd] = dateStr.split('-').map(Number);
                     const dateObj = new Date(yyyy, mm - 1, dd);
                     const isSunday = dateObj.getDay() === 0;
@@ -136,17 +136,19 @@ export default function SanLuongScreen() {
                 headerTitleText: (
                     <View style={styles.headerTitleContainer}>
                         <Text style={styles.headerTitleLeft}>Sản lượng tháng {estronMonth}</Text>
-                        <View style={[styles.headerTitleRightContainer, { backgroundColor: valueColor }]}>
-                            <Text style={styles.headerTitleRight}>
-                                {tongCongThangDaThucHienStr}/{tongCongThangCanThucHienStr}
-                            </Text>
-                        </View>
                     </View>
                 ),
                 headerLeft: () => (
                     <TouchableOpacity onPress={() => setShowLichTrinhModal(true)} style={styles.headerLeftButton}>
                         <Ionicons name="calendar-outline" size={24} color="#FFFFFF" />
                     </TouchableOpacity>
+                ),
+                headerRight: () => (
+                    <View style={[styles.headerTitleRightContainer, { backgroundColor: valueColor }]}>
+                        <Text style={styles.headerTitleRight}>
+                            {tongCongThangDaThucHienStr}/{tongCongThangCanThucHienStr}
+                        </Text>
+                    </View>
                 )
             });
         } catch (error) {
@@ -294,8 +296,8 @@ export default function SanLuongScreen() {
                     <Text style={styles.emptyMessage}>Chưa có dữ liệu sản lượng</Text>
                 </View>
             ) : (
-                <ScrollView 
-                    style={styles.scrollView} 
+                <ScrollView
+                    style={styles.scrollView}
                     contentContainerStyle={styles.scrollContent}
                     showsVerticalScrollIndicator={false}
                     showsHorizontalScrollIndicator={false}
@@ -640,10 +642,10 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
     },
     headerTitleRightContainer: {
-        position: 'absolute',
-        right: 8,
-        padding: 4,
-        borderRadius: 4,
+        minWidth: 70,
+        paddingHorizontal: 6,
+        paddingVertical: 4,
+        borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
     },

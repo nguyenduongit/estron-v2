@@ -23,6 +23,7 @@ export interface CustomHeaderProps {
     titleStyle?: StyleProp<TextStyle>;
     platformOptions?: Partial<Record<PlatformName, Partial<Omit<CustomHeaderProps, 'title' | 'platformOptions'>>>>;
     headerLeft?: () => React.ReactNode;
+    headerRight?: () => React.ReactNode;
 }
 
 const DEFAULT_BACKGROUND = '#007AFF';
@@ -40,15 +41,18 @@ export default function CustomHeader(props: CustomHeaderProps) {
         contentStyle,
         titleStyle,
         headerLeft,
+        headerRight,
     } = merged;
 
     const leftButton = headerLeft ? headerLeft() : null;
+    const rightButton = headerRight ? headerRight() : null;
+    const hasSideContent = Boolean(leftButton || rightButton);
 
     if (Platform.OS === 'web') {
         return (
             <View style={[styles.safeArea, { backgroundColor }, containerStyle]}>
                 <View style={[styles.content, { height, backgroundColor }, contentStyle]}>
-                    {leftButton && (
+                    {hasSideContent && (
                         <View style={styles.leftContainer}>
                             {leftButton}
                         </View>
@@ -62,8 +66,10 @@ export default function CustomHeader(props: CustomHeaderProps) {
                             {title}
                         </View>
                     )}
-                    {leftButton && (
-                        <View style={styles.rightContainer} />
+                    {hasSideContent && (
+                        <View style={styles.rightContainer}>
+                            {rightButton}
+                        </View>
                     )}
                 </View>
             </View>
@@ -75,7 +81,7 @@ export default function CustomHeader(props: CustomHeaderProps) {
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor: topInsetBackgroundColor }, containerStyle]} edges={safeAreaEdges}>
             <View style={[styles.content, { height, backgroundColor }, contentStyle]}>
-                {leftButton && (
+                {hasSideContent && (
                     <View style={styles.leftContainer}>
                         {leftButton}
                     </View>
@@ -89,8 +95,10 @@ export default function CustomHeader(props: CustomHeaderProps) {
                         {title}
                     </View>
                 )}
-                {leftButton && (
-                    <View style={styles.rightContainer} />
+                {hasSideContent && (
+                    <View style={styles.rightContainer}>
+                        {rightButton}
+                    </View>
                 )}
             </View>
         </SafeAreaView>
@@ -131,5 +139,9 @@ const styles = StyleSheet.create({
     },
     rightContainer: {
         width: 52,
+        justifyContent: 'center',
+        alignItems: 'flex-end',
+        paddingRight: 4,
+        overflow: 'visible',
     },
 });

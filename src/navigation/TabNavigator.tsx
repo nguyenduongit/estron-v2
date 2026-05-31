@@ -1,7 +1,7 @@
 import React from 'react';
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { View } from 'react-native';
+import { PanResponder, View } from 'react-native';
 import NhapLieuScreen from '../screens/NhapLieuScreen';
 import SanLuongScreen from '../screens/SanLuongScreen';
 import CongTuanScreen from '../screens/CongTuanScreen';
@@ -9,57 +9,94 @@ import TaiLieuScreen from '../screens/TaiLieuScreen';
 import CustomHeader from '../components/layout/CustomHeader';
 import CustomTabNavigator from '../components/layout/CustomTabNavigator';
 
-const TopTab = createMaterialTopTabNavigator();
+const TAB_ROUTES = ['NhapLieu', 'SanLuong', 'CongTuan', 'TaiLieu'];
 
-const TopTabScreen = (Component: React.ComponentType<any>, initialOptions: any) => {
-  return (props: any) => {
-    const [headerOptions, setHeaderOptions] = React.useState<any>(initialOptions);
+interface SwipeableScreenWrapperProps {
+  children: React.ReactNode;
+  routeName: string;
+  disabled?: boolean;
+}
 
-    const proxiedNavigation = React.useMemo(() => {
-      return {
-        ...props.navigation,
-        setOptions: (options: any) => {
-          setHeaderOptions((prev: any) => ({ ...prev, ...options }));
-          props.navigation.setOptions(options);
+
+// Better yet, use navigation directly inside the functional wrapper:
+function SwipeableNavigationWrapper({ children, routeName, disabled = false, navigation }: SwipeableScreenWrapperProps & { navigation: any }) {
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        if (disabled) return false;
+        const { dx, dy } = gestureState;
+        return Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 2;
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        if (disabled) return;
+        const { dx } = gestureState;
+        const currentIndex = TAB_ROUTES.indexOf(routeName);
+        
+        if (dx < -50) {
+          if (currentIndex < TAB_ROUTES.length - 1) {
+            navigation.navigate(TAB_ROUTES[currentIndex + 1]);
+          }
+        } else if (dx > 50) {
+          if (currentIndex > 0) {
+            navigation.navigate(TAB_ROUTES[currentIndex - 1]);
+          }
         }
-      };
-    }, [props.navigation]);
+      },
+    })
+  ).current;
 
+  return (
+    <View style={{ flex: 1 }} {...panResponder.panHandlers}>
+      {children}
+    </View>
+  );
+}
+
+const SwipeableScreen = (Component: React.ComponentType<any>, routeName: string) => {
+  return (props: any) => {
+    const hasActiveSubScreen = props.route?.params?.hasActiveSubScreen === true;
     return (
-      <View style={{ flex: 1 }}>
-        <CustomHeader
-          title={headerOptions.headerTitleText ?? headerOptions.title ?? props.route.name}
-          backgroundColor={headerOptions.headerBackgroundColor}
-          topInsetBackgroundColor={headerOptions.headerSafeAreaColor}
-          titleColor={headerOptions.headerTitleColor}
-          height={headerOptions.headerHeight}
-          contentStyle={headerOptions.headerContentStyle}
-          containerStyle={headerOptions.headerContainerStyle}
-          titleStyle={headerOptions.headerTitleTextStyle}
-          platformOptions={headerOptions.headerPlatformOptions}
-          headerLeft={headerOptions.headerLeft}
-        />
-        <Component {...props} navigation={proxiedNavigation} />
-      </View>
+      <SwipeableNavigationWrapper routeName={routeName} disabled={hasActiveSubScreen} navigation={props.navigation}>
+        <Component {...props} />
+      </SwipeableNavigationWrapper>
     );
   };
 };
 
+const Tab = createBottomTabNavigator();
+
 export default function TabNavigator() {
   return (
-    <TopTab.Navigator
-      tabBarPosition="bottom"
+    <Tab.Navigator
       tabBar={(props) => <CustomTabNavigator {...props} />}
       screenOptions={{
-        swipeEnabled: true,
+        headerShown: true,
+        header: ({ options }) => {
+          const headerOptions = options as any;
+
+          return (
+            <CustomHeader
+              title={headerOptions.headerTitleText ?? options.title ?? ''}
+              backgroundColor={headerOptions.headerBackgroundColor}
+              topInsetBackgroundColor={headerOptions.headerSafeAreaColor}
+              titleColor={headerOptions.headerTitleColor}
+              height={headerOptions.headerHeight}
+              contentStyle={headerOptions.headerContentStyle}
+              containerStyle={headerOptions.headerContainerStyle}
+              titleStyle={headerOptions.headerTitleTextStyle}
+              platformOptions={headerOptions.headerPlatformOptions}
+              headerLeft={headerOptions.headerLeft}
+              headerRight={headerOptions.headerRight}
+            />
+          );
+        },
+        tabBarActiveTintColor: '#007AFF',
+        tabBarInactiveTintColor: '#8E8E93',
       }}
     >
-      <TopTab.Screen
+      <Tab.Screen
         name="NhapLieu"
-        component={TopTabScreen(NhapLieuScreen, {
-          title: 'Nhập liệu',
-          headerTitleText: 'Nhập liệu',
-        })}
+        component={SwipeableScreen(NhapLieuScreen, 'NhapLieu')}
         options={{
           title: 'Nhập liệu',
           headerTitleText: 'Nhập liệu',
@@ -69,12 +106,9 @@ export default function TabNavigator() {
           ),
         } as any}
       />
-      <TopTab.Screen
+      <Tab.Screen
         name="SanLuong"
-        component={TopTabScreen(SanLuongScreen, {
-          title: 'Sản lượng',
-          headerTitleText: 'Sản lượng',
-        })}
+        component={SwipeableScreen(SanLuongScreen, 'SanLuong')}
         options={{
           title: 'Sản lượng',
           headerTitleText: 'Sản lượng',
@@ -84,12 +118,9 @@ export default function TabNavigator() {
           ),
         } as any}
       />
-      <TopTab.Screen
+      <Tab.Screen
         name="CongTuan"
-        component={TopTabScreen(CongTuanScreen, {
-          title: 'Công tuần',
-          headerTitleText: 'Công tuần',
-        })}
+        component={SwipeableScreen(CongTuanScreen, 'CongTuan')}
         options={{
           title: 'Công tuần',
           headerTitleText: 'Công tuần',
@@ -99,12 +130,9 @@ export default function TabNavigator() {
           ),
         } as any}
       />
-      <TopTab.Screen
+      <Tab.Screen
         name="TaiLieu"
-        component={TopTabScreen(TaiLieuScreen, {
-          title: 'Tài liệu',
-          headerTitleText: 'Tài liệu',
-        })}
+        component={SwipeableScreen(TaiLieuScreen, 'TaiLieu')}
         options={{
           title: 'Tài liệu',
           headerTitleText: 'Tài liệu',
@@ -114,6 +142,6 @@ export default function TabNavigator() {
           ),
         } as any}
       />
-    </TopTab.Navigator>
+    </Tab.Navigator>
   );
 }
