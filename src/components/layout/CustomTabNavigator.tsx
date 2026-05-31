@@ -1,6 +1,6 @@
 import React from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import type { MaterialTopTabBarProps } from '@react-navigation/material-top-tabs';
 
 const ACTIVE_TINT = '#007AFF';
 const INACTIVE_TINT = '#8E8E93';
@@ -8,7 +8,7 @@ const TAB_BAR_HEIGHT = Platform.OS === 'web' ? 40 : 78;
 
 export const CUSTOM_TAB_BAR_HEIGHT = TAB_BAR_HEIGHT;
 
-export default function CustomTabNavigator({ state, descriptors, navigation }: BottomTabBarProps) {
+export default function CustomTabNavigator({ state, descriptors, navigation }: MaterialTopTabBarProps) {
     return (
         <View style={styles.container}>
             {state.routes.map((route, index) => {
@@ -51,7 +51,7 @@ export default function CustomTabNavigator({ state, descriptors, navigation }: B
                         style={styles.item}
                     >
                         <View style={styles.icon}>
-                            {options.tabBarIcon?.({ focused, color, size: 30 })}
+                            {(options.tabBarIcon as any)?.({ focused, color, size: 30 })}
                         </View>
                         <Text numberOfLines={1} style={[styles.label, { color }]}>
                             {label}
