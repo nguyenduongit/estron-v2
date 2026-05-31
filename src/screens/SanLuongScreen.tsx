@@ -1,11 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable, Modal, TextInput, TouchableOpacity, Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fetchUserData, saveUserData } from '../utils/supabase';
+import { fetchUserData, saveUserData, fetchMonthlySchedule } from '../utils/supabase';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { getEstronMonthRange, getEstronDays } from '../utils/dateUtils';
 import { Ionicons } from '@expo/vector-icons';
-import { getScheduleSettings, getTargetMinutesForDate } from '../utils/schedule';
 import LichTrinhScreen from './LichTrinhScreen';
 
 export default function SanLuongScreen() {
@@ -27,15 +26,15 @@ export default function SanLuongScreen() {
             const phone = user.phone;
             if (!phone) return;
 
-            const [userData, schedule] = await Promise.all([
+            // Tính toán tháng Estron hiện tại
+            const { startDate, endDate, estronMonth, estronYear } = getEstronMonthRange();
+            const estronDays = getEstronDays(startDate, endDate);
+
+            const [userData, monthlySchedule] = await Promise.all([
                 fetchUserData(user),
-                getScheduleSettings()
+                fetchMonthlySchedule(user.id, estronYear, estronMonth, startDate, endDate)
             ]);
             setFullUserData(userData);
-
-            // Tính toán tháng Estron hiện tại
-            const { startDate, endDate, estronMonth } = getEstronMonthRange();
-            const estronDays = getEstronDays(startDate, endDate);
 
             const nangSuat = userData?.nangSuat || {};
             const congDoanList = userData?.congDoan || [];
@@ -54,15 +53,20 @@ export default function SanLuongScreen() {
                     const hasData = dayData !== undefined;
                     
                     const [yyyy, mm, dd] = dateStr.split('-').map(Number);
-                    const isSunday = new Date(yyyy, mm - 1, dd).getDay() === 0;
+                    const dateObj = new Date(yyyy, mm - 1, dd);
+                    const isSunday = dateObj.getDay() === 0;
 
-                    // Tự động ẩn các block ngày chủ nhật nếu không có dữ liệu
-                    if (isSunday && !hasData) {
+                    // Lấy thông tin lịch trình tháng của ngày này
+                    const scheduleVal = monthlySchedule?.[dateStr];
+                    const isScheduledOff = scheduleVal === 'Nghỉ';
+
+                    // Tự động ẩn các block ngày nghỉ nếu không có dữ liệu
+                    if (isScheduledOff && !hasData) {
                         return null;
                     }
 
-                    const dateObj = new Date(yyyy, mm - 1, dd);
-                    const defaultThucHien = getTargetMinutesForDate(dateObj, schedule);
+                    // Thời gian thực hiện mặc định lấy từ lịch trình
+                    const defaultThucHien = isScheduledOff ? 0 : Number(scheduleVal ?? (isSunday ? 0 : dateObj.getDay() === 6 ? 240 : 480));
 
                     const hoTro = hasData ? (Number(dayData.thoiGianHoTro) || 0) : 0;
                     const thucHien = hasData ? (dayData.thoiGianThucHien !== undefined ? Number(dayData.thoiGianThucHien) : defaultThucHien) : 0;
