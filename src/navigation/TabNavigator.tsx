@@ -123,6 +123,7 @@ export default function TabNavigator() {
               containerStyle={headerOptions.headerContainerStyle}
               titleStyle={headerOptions.headerTitleTextStyle}
               platformOptions={headerOptions.headerPlatformOptions}
+              headerLeft={headerOptions.headerLeft}
             />
           );
         },

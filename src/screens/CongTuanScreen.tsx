@@ -5,6 +5,7 @@ import { fetchUserData } from '../utils/supabase';
 import { useFocusEffect } from '@react-navigation/native';
 import { getEstronMonthRange, getEstronWeeks } from '../utils/dateUtils';
 import { Ionicons } from '@expo/vector-icons';
+import { getScheduleSettings, getTargetMinutesForDate } from '../utils/schedule';
 
 // Thuật toán làm tròn và quy đổi tránh Floating Point Error
 const floorTo3 = (num: number): number => {
@@ -28,7 +29,10 @@ export default function CongTuanScreen({ navigation }: any) {
             const phone = user.phone;
             if (!phone) return;
 
-            const userData = await fetchUserData(user);
+            const [userData, schedule] = await Promise.all([
+                fetchUserData(user),
+                getScheduleSettings()
+            ]);
             
             // Tính toán tuần Estron hiện tại
             const { startDate, endDate, estronMonth } = getEstronMonthRange();
@@ -75,8 +79,7 @@ export default function CongTuanScreen({ navigation }: any) {
                     }
                     
                     const hoTroMinutes = hasData ? (Number(dayData.thoiGianHoTro) || 0) : 0;
-                    const isSaturday = dayOfWeek === 6;
-                    const defaultThucHien = isSunday ? 0 : (isSaturday ? 240 : 480);
+                    const defaultThucHien = getTargetMinutesForDate(dateObj, schedule);
                     const thucHien = hasData ? (dayData.thoiGianThucHien !== undefined ? Number(dayData.thoiGianThucHien) : defaultThucHien) : 0;
                     
                     // expected work for this day

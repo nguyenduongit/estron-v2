@@ -5,6 +5,8 @@ import { fetchUserData, saveUserData } from '../utils/supabase';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { getEstronMonthRange, getEstronDays } from '../utils/dateUtils';
 import { Ionicons } from '@expo/vector-icons';
+import { getScheduleSettings, getTargetMinutesForDate } from '../utils/schedule';
+import LichTrinhScreen from './LichTrinhScreen';
 
 export default function SanLuongScreen() {
     const navigation = useNavigation<any>();
@@ -14,6 +16,7 @@ export default function SanLuongScreen() {
     const [editingItem, setEditingItem] = useState<any>(null);
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [editValue, setEditValue] = useState('');
+    const [showLichTrinhModal, setShowLichTrinhModal] = useState(false);
 
     const loadData = useCallback(async () => {
         setLoading(true);
@@ -24,7 +27,10 @@ export default function SanLuongScreen() {
             const phone = user.phone;
             if (!phone) return;
 
-            const userData = await fetchUserData(user);
+            const [userData, schedule] = await Promise.all([
+                fetchUserData(user),
+                getScheduleSettings()
+            ]);
             setFullUserData(userData);
 
             // Tính toán tháng Estron hiện tại
@@ -55,8 +61,8 @@ export default function SanLuongScreen() {
                         return null;
                     }
 
-                    const isSaturday = new Date(yyyy, mm - 1, dd).getDay() === 6;
-                    const defaultThucHien = isSunday ? 0 : (isSaturday ? 240 : 480);
+                    const dateObj = new Date(yyyy, mm - 1, dd);
+                    const defaultThucHien = getTargetMinutesForDate(dateObj, schedule);
 
                     const hoTro = hasData ? (Number(dayData.thoiGianHoTro) || 0) : 0;
                     const thucHien = hasData ? (dayData.thoiGianThucHien !== undefined ? Number(dayData.thoiGianThucHien) : defaultThucHien) : 0;
@@ -131,6 +137,11 @@ export default function SanLuongScreen() {
                             </Text>
                         </View>
                     </View>
+                ),
+                headerLeft: () => (
+                    <TouchableOpacity onPress={() => setShowLichTrinhModal(true)} style={styles.headerLeftButton}>
+                        <Ionicons name="calendar-outline" size={24} color="#FFFFFF" />
+                    </TouchableOpacity>
                 )
             });
         } catch (error) {
@@ -257,6 +268,14 @@ export default function SanLuongScreen() {
 
     return (
         <View style={styles.screen}>
+            <Modal
+                animationType="slide"
+                transparent={false}
+                visible={showLichTrinhModal}
+                onRequestClose={() => setShowLichTrinhModal(false)}
+            >
+                <LichTrinhScreen onClose={() => { setShowLichTrinhModal(false); loadData(); }} />
+            </Modal>
             {loading ? (
                 <View style={styles.centerContainer}>
                     <ActivityIndicator size="large" color="#007AFF" />
@@ -623,5 +642,11 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '600',
         color: '#FFFFFF',
+    },
+    headerLeftButton: {
+        paddingVertical: 6,
+        paddingHorizontal: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });

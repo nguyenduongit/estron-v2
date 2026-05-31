@@ -22,10 +22,10 @@ export interface CustomHeaderProps {
     contentStyle?: StyleProp<ViewStyle>;
     titleStyle?: StyleProp<TextStyle>;
     platformOptions?: Partial<Record<PlatformName, Partial<Omit<CustomHeaderProps, 'title' | 'platformOptions'>>>>;
+    headerLeft?: () => React.ReactNode;
 }
 
 const DEFAULT_BACKGROUND = '#007AFF';
-const DEFAULT_TINT = '#007AFF';
 
 export default function CustomHeader(props: CustomHeaderProps) {
     const platformProps = props.platformOptions?.[Platform.OS as PlatformName] ?? {};
@@ -39,12 +39,20 @@ export default function CustomHeader(props: CustomHeaderProps) {
         containerStyle,
         contentStyle,
         titleStyle,
+        headerLeft,
     } = merged;
+
+    const leftButton = headerLeft ? headerLeft() : null;
 
     if (Platform.OS === 'web') {
         return (
             <View style={[styles.safeArea, { backgroundColor }, containerStyle]}>
                 <View style={[styles.content, { height, backgroundColor }, contentStyle]}>
+                    {leftButton && (
+                        <View style={styles.leftContainer}>
+                            {leftButton}
+                        </View>
+                    )}
                     {typeof title === 'string' || typeof title === 'number' ? (
                         <Text numberOfLines={1} style={[styles.title, { color: titleColor }, titleStyle]}>
                             {title}
@@ -53,6 +61,9 @@ export default function CustomHeader(props: CustomHeaderProps) {
                         <View style={styles.titleContainer}>
                             {title}
                         </View>
+                    )}
+                    {leftButton && (
+                        <View style={styles.rightContainer} />
                     )}
                 </View>
             </View>
@@ -64,6 +75,11 @@ export default function CustomHeader(props: CustomHeaderProps) {
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor: topInsetBackgroundColor }, containerStyle]} edges={safeAreaEdges}>
             <View style={[styles.content, { height, backgroundColor }, contentStyle]}>
+                {leftButton && (
+                    <View style={styles.leftContainer}>
+                        {leftButton}
+                    </View>
+                )}
                 {typeof title === 'string' || typeof title === 'number' ? (
                     <Text numberOfLines={1} style={[styles.title, { color: titleColor }, titleStyle]}>
                         {title}
@@ -72,6 +88,9 @@ export default function CustomHeader(props: CustomHeaderProps) {
                     <View style={styles.titleContainer}>
                         {title}
                     </View>
+                )}
+                {leftButton && (
+                    <View style={styles.rightContainer} />
                 )}
             </View>
         </SafeAreaView>
@@ -101,5 +120,16 @@ const styles = StyleSheet.create({
         minWidth: 0,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
+    },
+    leftContainer: {
+        width: 52,
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        paddingLeft: 4,
+        zIndex: 10,
+    },
+    rightContainer: {
+        width: 52,
     },
 });

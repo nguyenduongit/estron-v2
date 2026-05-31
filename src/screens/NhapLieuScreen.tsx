@@ -4,31 +4,43 @@ import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import { fetchUserData, saveUserData } from '../utils/supabase';
 import { getEstronMonthRange, formatLocalDateStr, getLocalISOString } from '../utils/dateUtils';
+import { getScheduleSettings, getTargetMinutesForDate, ScheduleSettings, DEFAULT_SCHEDULE } from '../utils/schedule';
 
 interface CongDoan {
     maCongDoan: string;
     dinhMuc: number;
 }
 
-const getDefaultThucHien = (d: Date) => {
-    const dayOfWeek = d.getDay();
-    if (dayOfWeek === 0) return '0'; // Chủ nhật
-    if (dayOfWeek === 6) return '240'; // Thứ 7
-    return '480'; // Thứ 2 đến thứ 6
-};
-
 export default function NhapLieuScreen() {
     const [user, setUser] = useState<any>(null);
     const [date, setDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
 
+    // Schedule Settings State
+    const [scheduleSettings, setScheduleSettings] = useState<ScheduleSettings>(DEFAULT_SCHEDULE);
+
+    useFocusEffect(
+        useCallback(() => {
+            const loadSchedule = async () => {
+                const s = await getScheduleSettings();
+                setScheduleSettings(s);
+            };
+            loadSchedule();
+        }, [])
+    );
+
+    const getDefaultThucHien = useCallback((d: Date) => {
+        return getTargetMinutesForDate(d, scheduleSettings).toString();
+    }, [scheduleSettings]);
+
     // User Data State
     const [danhSachCongDoan, setDanhSachCongDoan] = useState<CongDoan[]>([]);
     const [maCongDoan, setMaCongDoan] = useState('');
     const [soLuong, setSoLuong] = useState('');
-    const [thoiGianThucHien, setThoiGianThucHien] = useState(getDefaultThucHien(new Date()));
+    const [thoiGianThucHien, setThoiGianThucHien] = useState(getTargetMinutesForDate(new Date(), DEFAULT_SCHEDULE).toString());
     const [thoiGianHoTro, setThoiGianHoTro] = useState('0');
 
     const [isSaving, setIsSaving] = useState(false);
@@ -58,7 +70,7 @@ export default function NhapLieuScreen() {
             setThoiGianThucHien(defaultThucHien);
             setThoiGianHoTro('0');
         }
-    }, [date, fullData]);
+    }, [date, fullData, getDefaultThucHien]);
 
     const loadUserData = useCallback(async (targetDate: Date) => {
         setIsLoadingData(true);
