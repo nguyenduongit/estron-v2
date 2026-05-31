@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable, Modal, TextInput, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fetchUserData, saveUserData } from '../utils/blobStorage';
+import { fetchUserData, saveUserData } from '../utils/supabase';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { getEstronMonthRange, getEstronDays } from '../utils/dateUtils';
 import { Ionicons } from '@expo/vector-icons';

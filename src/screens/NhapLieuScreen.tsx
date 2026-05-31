@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fetchUserData, saveUserData } from '../utils/blobStorage';
+import { fetchUserData, saveUserData } from '../utils/supabase';
 import { getEstronMonthRange, formatLocalDateStr, getLocalISOString } from '../utils/dateUtils';
 
 interface CongDoan {

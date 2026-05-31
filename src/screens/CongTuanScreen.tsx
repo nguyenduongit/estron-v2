@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fetchUserData } from '../utils/blobStorage';
+import { fetchUserData } from '../utils/supabase';
 import { useFocusEffect } from '@react-navigation/native';
 import { getEstronMonthRange, getEstronWeeks } from '../utils/dateUtils';
 import { Ionicons } from '@expo/vector-icons';

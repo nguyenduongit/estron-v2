@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator, Platform, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fetchUsers, saveUsers } from '../utils/blobStorage';
-import { getLocalISOString } from '../utils/dateUtils';
+import { loginUser, registerUser } from '../utils/supabase';
 
 interface AuthScreenProps {
     onAuthSuccess: (user: any) => void;
@@ -28,8 +27,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
 
         setIsLoading(true);
         try {
-            const users = await fetchUsers();
-            const existingUser = users.find((u: any) => u.phone === phone.trim());
+            const existingUser = await loginUser(phone.trim());
 
             if (isLoginMode) {
                 if (existingUser) {
@@ -44,11 +42,13 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                 if (existingUser) {
                     Platform.OS === 'web' ? alert('Số điện thoại đã được đăng ký!') : Alert.alert('Lỗi', 'Số điện thoại đã được đăng ký!');
                 } else {
-                    const newUser = { id: Date.now().toString(), name: name.trim(), phone: phone.trim(), createdAt: getLocalISOString() };
-                    users.push(newUser);
-                    await saveUsers(users);
-                    await AsyncStorage.setItem('user', JSON.stringify(newUser));
-                    onAuthSuccess(newUser);
+                    const newUser = await registerUser(name.trim(), phone.trim());
+                    if (newUser) {
+                        await AsyncStorage.setItem('user', JSON.stringify(newUser));
+                        onAuthSuccess(newUser);
+                    } else {
+                        throw new Error("Không thể tạo tài khoản");
+                    }
                 }
             }
         } catch (error: any) {
