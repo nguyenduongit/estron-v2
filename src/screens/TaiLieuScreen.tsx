@@ -393,7 +393,7 @@ export default function TaiLieuScreen({ navigation }: any) {
 
     if (activeSubScreen === 'solder') {
         return (
-            <View style={styles.screen}>
+            <View style={styles.screen} {...({ className: 'selectable' } as any)}>
                 <View style={styles.searchWrapper}>
                     <View style={styles.searchContainer}>
                         <Ionicons name="search-outline" size={20} color="#8E8E93" style={styles.searchIcon} />
@@ -448,7 +448,7 @@ export default function TaiLieuScreen({ navigation }: any) {
 
     if (activeSubScreen === 'chatluong') {
         return (
-            <View style={styles.screen}>
+            <View style={styles.screen} {...({ className: 'selectable' } as any)}>
                 <ScrollView 
                     style={styles.subScreenScroll} 
                     contentContainerStyle={styles.subScreenContent}
@@ -562,7 +562,7 @@ export default function TaiLieuScreen({ navigation }: any) {
 
     if (activeSubScreen === 'core') {
         return (
-            <View style={styles.screen}>
+            <View style={styles.screen} {...({ className: 'selectable' } as any)}>
                 <ScrollView 
                     style={styles.subScreenScroll} 
                     contentContainerStyle={styles.subScreenContent}
@@ -625,7 +625,7 @@ export default function TaiLieuScreen({ navigation }: any) {
 
     if (activeSubScreen === 'policy') {
         return (
-            <View style={styles.screen}>
+            <View style={styles.screen} {...({ className: 'selectable' } as any)}>
                 <ScrollView 
                     style={styles.subScreenScroll} 
                     contentContainerStyle={styles.subScreenContent}
@@ -681,7 +681,7 @@ export default function TaiLieuScreen({ navigation }: any) {
 
     if (activeSubScreen === 'kpi') {
         return (
-            <View style={styles.screen}>
+            <View style={styles.screen} {...({ className: 'selectable' } as any)}>
                 <ScrollView 
                     style={styles.subScreenScroll} 
                     contentContainerStyle={styles.subScreenContent}

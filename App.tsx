@@ -23,6 +23,18 @@ export default function App() {
           -ms-overflow-style: none !important;
           scrollbar-width: none !important;
         }
+        body, html, #root {
+          user-select: none !important;
+          -webkit-user-select: none !important;
+          -moz-user-select: none !important;
+          -ms-user-select: none !important;
+        }
+        input, textarea, [contenteditable="true"], .selectable, .selectable * {
+          user-select: text !important;
+          -webkit-user-select: text !important;
+          -moz-user-select: text !important;
+          -ms-user-select: text !important;
+        }
       `;
       document.head.append(style);
     }
