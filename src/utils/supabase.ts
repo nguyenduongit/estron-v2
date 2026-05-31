@@ -1,34 +1,25 @@
+import { createClient } from '@supabase/supabase-js';
 import { getEstronMonthRange, formatLocalDateStr } from './dateUtils';
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://xcojffehtxhxnqkiggzo.supabase.co/rest/v1';
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://xcojffehtxhxnqkiggzo.supabase.co';
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhjb2pmZmVodHhoeG5xa2lnZ3pvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0ODAxNjEsImV4cCI6MjA2MDA1NjE2MX0.sEC_zq4IeYyAQn_AC8IG7Qd189ePi7O3oNHYrogDa2k';
 
-const getHeaders = (additionalHeaders: Record<string, string> = {}) => {
-    return {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json',
-        ...additionalHeaders
-    };
-};
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /**
  * Tra cứu người dùng bằng số điện thoại
  */
 export const loginUser = async (phone: string) => {
     if (!phone) return null;
-    const url = `${SUPABASE_URL}/users?phone=eq.${encodeURIComponent(phone.trim())}`;
     try {
-        const res = await fetch(url, {
-            method: 'GET',
-            headers: getHeaders()
-        });
-        if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(errText);
-        }
-        const data = await res.json();
-        return data.length > 0 ? data[0] : null;
+        const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('phone', phone.trim())
+            .maybeSingle();
+
+        if (error) throw error;
+        return data;
     } catch (error) {
         console.error("loginUser error:", error);
         throw error;
@@ -39,24 +30,18 @@ export const loginUser = async (phone: string) => {
  * Đăng ký người dùng mới
  */
 export const registerUser = async (name: string, phone: string) => {
-    const url = `${SUPABASE_URL}/users`;
     try {
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: getHeaders({
-                'Prefer': 'return=representation'
-            }),
-            body: JSON.stringify({
+        const { data, error } = await supabase
+            .from('users')
+            .insert({
                 name: name.trim(),
                 phone: phone.trim()
             })
-        });
-        if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(errText);
-        }
-        const data = await res.json();
-        return data.length > 0 ? data[0] : null;
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
     } catch (error) {
         console.error("registerUser error:", error);
         throw error;
@@ -65,44 +50,40 @@ export const registerUser = async (name: string, phone: string) => {
 
 /**
  * Lấy dữ liệu định mức (dinh_muc) và sản lượng (san_luong) của người dùng
+ * Thực hiện truy vấn song song (Promise.all) để tối ưu thời gian phản hồi
  */
 export const fetchUserData = async (user: { id: string, name: string, phone: string }, targetDate: Date = new Date()) => {
     if (!user || !user.id) return null;
 
     try {
-        // 1. Fetch quota (dinh_muc)
-        const dinhMucUrl = `${SUPABASE_URL}/dinh_muc?user_id=eq.${user.id}`;
-        const dinhMucRes = await fetch(dinhMucUrl, {
-            method: 'GET',
-            headers: getHeaders()
-        });
-        
-        let congDoan: any[] = [];
-        if (dinhMucRes.ok) {
-            const data = await dinhMucRes.json();
-            if (data.length > 0) {
-                congDoan = data[0].cong_doan_data || [];
-            }
-        }
-
-        // 2. Fetch production data (san_luong) for the current Estron month range
         const { startDate, endDate } = getEstronMonthRange(targetDate);
         const startDateStr = formatLocalDateStr(startDate);
         const endDateStr = formatLocalDateStr(endDate);
-        
-        const sanLuongUrl = `${SUPABASE_URL}/san_luong?user_id=eq.${user.id}&ngay_lam_viec=gte.${startDateStr}&ngay_lam_viec=lte.${endDateStr}`;
-        const sanLuongRes = await fetch(sanLuongUrl, {
-            method: 'GET',
-            headers: getHeaders()
-        });
 
+        // Fetch dinh_muc and san_luong in parallel using Promise.all
+        const [dinhMucResult, sanLuongResult] = await Promise.all([
+            supabase
+                .from('dinh_muc')
+                .select('cong_doan_data')
+                .eq('user_id', user.id)
+                .maybeSingle(),
+            supabase
+                .from('san_luong')
+                .select('ngay_lam_viec, chi_tiet_san_luong')
+                .eq('user_id', user.id)
+                .gte('ngay_lam_viec', startDateStr)
+                .lte('ngay_lam_viec', endDateStr)
+        ]);
+
+        if (dinhMucResult.error) throw dinhMucResult.error;
+        if (sanLuongResult.error) throw sanLuongResult.error;
+
+        const congDoan = dinhMucResult.data?.cong_doan_data || [];
+        
         const nangSuat: Record<string, any> = {};
-        if (sanLuongRes.ok) {
-            const data = await sanLuongRes.json();
-            data.forEach((row: any) => {
-                nangSuat[row.ngay_lam_viec] = row.chi_tiet_san_luong;
-            });
-        }
+        sanLuongResult.data?.forEach((row: any) => {
+            nangSuat[row.ngay_lam_viec] = row.chi_tiet_san_luong;
+        });
 
         return {
             congDoan,
@@ -116,50 +97,78 @@ export const fetchUserData = async (user: { id: string, name: string, phone: str
 
 /**
  * Lưu dữ liệu định mức (dinh_muc) và sản lượng (san_luong) của người dùng
+ * Sử dụng hàm RPC save_user_data_transactional để lưu dạng giao dịch ACID (Database transaction).
+ * Nếu RPC chưa được thiết lập trên database, hàm tự động fallback sang lưu song song client-side.
  */
 export const saveUserData = async (user: { id: string, name: string, phone: string }, data: any) => {
     if (!user || !user.id) throw new Error("Thông tin người dùng không hợp lệ");
 
-    // 1. Lưu định mức (congDoan) vào bảng dinh_muc
-    if (data.congDoan) {
-        const url = `${SUPABASE_URL}/dinh_muc?on_conflict=user_id`;
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: getHeaders({
-                'Prefer': 'resolution=merge-duplicates'
-            }),
-            body: JSON.stringify({
-                user_id: user.id,
-                cong_doan_data: data.congDoan
-            })
-        });
-        if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(`Lỗi lưu định mức: ${errText}`);
-        }
-    }
-
-    // 2. Lưu sản lượng (nangSuat) vào bảng san_luong
-    if (data.nangSuat && Object.keys(data.nangSuat).length > 0) {
-        const url = `${SUPABASE_URL}/san_luong?on_conflict=user_id,ngay_lam_viec`;
-        const rows = Object.entries(data.nangSuat).map(([dateStr, detail]) => ({
-            user_id: user.id,
+    const congDoanData = data.congDoan || null;
+    const sanLuongRows = data.nangSuat && Object.keys(data.nangSuat).length > 0
+        ? Object.entries(data.nangSuat).map(([dateStr, detail]) => ({
             ngay_lam_viec: dateStr,
             chi_tiet_san_luong: detail
-        }));
+          }))
+        : [];
 
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: getHeaders({
-                'Prefer': 'resolution=merge-duplicates'
-            }),
-            body: JSON.stringify(rows)
+    try {
+        // Gọi hàm RPC trên Supabase để thực hiện giao dịch ghi nguyên tử
+        const { error } = await supabase.rpc('save_user_data_transactional', {
+            p_user_id: user.id,
+            p_cong_doan_data: congDoanData,
+            p_san_luong_rows: sanLuongRows
         });
-        if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(`Lỗi lưu sản lượng: ${errText}`);
+
+        if (error) {
+            // Nếu lỗi RPC chưa được tạo trong database, tự động chạy cơ chế dự phòng client-side
+            if (error.code === 'P0001' || error.message.includes('function') || error.message.includes('does not exist')) {
+                console.warn("RPC function save_user_data_transactional not found. Falling back to client-side saves.");
+                await saveUserDataFallback(user.id, congDoanData, sanLuongRows);
+            } else {
+                throw error;
+            }
         }
+    } catch (error: any) {
+        console.error("saveUserData error:", error);
+        throw new Error(`Lỗi lưu dữ liệu: ${error.message}`);
     }
+};
+
+const saveUserDataFallback = async (userId: string, congDoan: any, sanLuongRows: any[]) => {
+    const savePromises: Promise<any>[] = [];
+
+    // 1. Lưu định mức
+    if (congDoan) {
+        const saveDinhMuc = async () => {
+            const { error } = await supabase
+                .from('dinh_muc')
+                .upsert({
+                    user_id: userId,
+                    cong_doan_data: congDoan
+                }, { onConflict: 'user_id' });
+            if (error) throw error;
+        };
+        savePromises.push(saveDinhMuc());
+    }
+
+    // 2. Lưu sản lượng
+    if (sanLuongRows.length > 0) {
+        const saveSanLuong = async () => {
+            const rows = sanLuongRows.map(row => ({
+                user_id: userId,
+                ngay_lam_viec: row.ngay_lam_viec,
+                chi_tiet_san_luong: row.chi_tiet_san_luong
+            }));
+
+            const { error } = await supabase
+                .from('san_luong')
+                .upsert(rows, { onConflict: 'user_id,ngay_lam_viec' });
+            if (error) throw error;
+        };
+        savePromises.push(saveSanLuong());
+    }
+
+    await Promise.all(savePromises);
 };
 
 /**
@@ -176,22 +185,19 @@ export const fetchMonthlySchedule = async (
     if (!userId) return null;
     
     const estronMonthStr = `${estronYear}-${String(estronMonth).padStart(2, '0')}`;
-    const url = `${SUPABASE_URL}/lich_trinh_thang?user_id=eq.${userId}&estron_month=eq.${estronMonthStr}`;
     
     try {
-        const res = await fetch(url, {
-            method: 'GET',
-            headers: getHeaders()
-        });
+        const { data, error } = await supabase
+            .from('lich_trinh_thang')
+            .select('schedule_data')
+            .eq('user_id', userId)
+            .eq('estron_month', estronMonthStr)
+            .maybeSingle();
+
+        if (error) throw error;
         
-        if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(errText);
-        }
-        
-        const data = await res.json();
-        if (data.length > 0) {
-            return data[0].schedule_data;
+        if (data) {
+            return data.schedule_data;
         }
         
         // Sinh lịch trình mặc định nếu chưa có
@@ -244,25 +250,17 @@ export const saveMonthlySchedule = async (
     if (!userId) throw new Error("Thông tin người dùng không hợp lệ");
     
     const estronMonthStr = `${estronYear}-${String(estronMonth).padStart(2, '0')}`;
-    const url = `${SUPABASE_URL}/lich_trinh_thang?on_conflict=user_id,estron_month`;
     
     try {
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: getHeaders({
-                'Prefer': 'resolution=merge-duplicates'
-            }),
-            body: JSON.stringify({
+        const { error } = await supabase
+            .from('lich_trinh_thang')
+            .upsert({
                 user_id: userId,
                 estron_month: estronMonthStr,
                 schedule_data: scheduleData
-            })
-        });
-        
-        if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(errText);
-        }
+            }, { onConflict: 'user_id,estron_month' });
+
+        if (error) throw error;
     } catch (error) {
         console.error("saveMonthlySchedule error:", error);
         throw error;
