@@ -284,6 +284,7 @@ export default function TaiLieuScreen({ navigation }: any) {
 
     // Cập nhật header title và back button của tab theo trạng thái sub-screen
     useEffect(() => {
+        navigation.setParams({ hasActiveSubScreen: activeSubScreen !== null });
         if (activeSubScreen === 'solder') {
             navigation.setOptions({
                 headerTitleText: (

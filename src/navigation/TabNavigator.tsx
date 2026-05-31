@@ -1,12 +1,105 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { PanResponder, View } from 'react-native';
 import NhapLieuScreen from '../screens/NhapLieuScreen';
 import SanLuongScreen from '../screens/SanLuongScreen';
 import CongTuanScreen from '../screens/CongTuanScreen';
 import TaiLieuScreen from '../screens/TaiLieuScreen';
 import CustomHeader from '../components/layout/CustomHeader';
 import CustomTabNavigator from '../components/layout/CustomTabNavigator';
+
+const TAB_ROUTES = ['NhapLieu', 'SanLuong', 'CongTuan', 'TaiLieu'];
+
+interface SwipeableScreenWrapperProps {
+  children: React.ReactNode;
+  routeName: string;
+  disabled?: boolean;
+}
+
+function SwipeableScreenWrapper({ children, routeName, disabled = false }: SwipeableScreenWrapperProps) {
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        if (disabled) return false;
+        const { dx, dy } = gestureState;
+        // Only trigger swipe if horizontal movement is significant (50px) and dominant over vertical scrolling
+        return Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 2;
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        if (disabled) return;
+        const { dx } = gestureState;
+        const currentIndex = TAB_ROUTES.indexOf(routeName);
+        
+        if (dx < -50) {
+          // Swipe left (finger moves right to left) -> Next tab
+          if (currentIndex < TAB_ROUTES.length - 1) {
+            evt.currentTarget.dispatchEvent ? evt.currentTarget.dispatchEvent(new CustomEvent('tabNavigate', { detail: TAB_ROUTES[currentIndex + 1] })) : null;
+            // Fallback for native/navigation context
+            const navState = (evt as any)._targetInst?.stateNode;
+          }
+        } else if (dx > 50) {
+          // Swipe right (finger moves left to right) -> Previous tab
+          if (currentIndex > 0) {
+            evt.currentTarget.dispatchEvent ? evt.currentTarget.dispatchEvent(new CustomEvent('tabNavigate', { detail: TAB_ROUTES[currentIndex - 1] })) : null;
+          }
+        }
+      },
+    })
+  ).current;
+
+  // Let's implement navigation callback via useNavigation which is standard in React Navigation
+  return (
+    <View style={{ flex: 1 }} {...panResponder.panHandlers}>
+      {children}
+    </View>
+  );
+}
+
+// Better yet, use navigation directly inside the functional wrapper:
+function SwipeableNavigationWrapper({ children, routeName, disabled = false, navigation }: SwipeableScreenWrapperProps & { navigation: any }) {
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        if (disabled) return false;
+        const { dx, dy } = gestureState;
+        return Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 2;
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        if (disabled) return;
+        const { dx } = gestureState;
+        const currentIndex = TAB_ROUTES.indexOf(routeName);
+        
+        if (dx < -50) {
+          if (currentIndex < TAB_ROUTES.length - 1) {
+            navigation.navigate(TAB_ROUTES[currentIndex + 1]);
+          }
+        } else if (dx > 50) {
+          if (currentIndex > 0) {
+            navigation.navigate(TAB_ROUTES[currentIndex - 1]);
+          }
+        }
+      },
+    })
+  ).current;
+
+  return (
+    <View style={{ flex: 1 }} {...panResponder.panHandlers}>
+      {children}
+    </View>
+  );
+}
+
+const SwipeableScreen = (Component: React.ComponentType<any>, routeName: string) => {
+  return (props: any) => {
+    const hasActiveSubScreen = props.route?.params?.hasActiveSubScreen === true;
+    return (
+      <SwipeableNavigationWrapper routeName={routeName} disabled={hasActiveSubScreen} navigation={props.navigation}>
+        <Component {...props} />
+      </SwipeableNavigationWrapper>
+    );
+  };
+};
 
 const Tab = createBottomTabNavigator();
 
@@ -39,7 +132,7 @@ export default function TabNavigator() {
     >
       <Tab.Screen
         name="NhapLieu"
-        component={NhapLieuScreen}
+        component={SwipeableScreen(NhapLieuScreen, 'NhapLieu')}
         options={{
           title: 'Nhập liệu',
           headerTitleText: 'Nhập liệu',
@@ -51,7 +144,7 @@ export default function TabNavigator() {
       />
       <Tab.Screen
         name="SanLuong"
-        component={SanLuongScreen}
+        component={SwipeableScreen(SanLuongScreen, 'SanLuong')}
         options={{
           title: 'Sản lượng',
           headerTitleText: 'Sản lượng',
@@ -63,7 +156,7 @@ export default function TabNavigator() {
       />
       <Tab.Screen
         name="CongTuan"
-        component={CongTuanScreen}
+        component={SwipeableScreen(CongTuanScreen, 'CongTuan')}
         options={{
           title: 'Công tuần',
           headerTitleText: 'Công tuần',
@@ -75,7 +168,7 @@ export default function TabNavigator() {
       />
       <Tab.Screen
         name="TaiLieu"
-        component={TaiLieuScreen}
+        component={SwipeableScreen(TaiLieuScreen, 'TaiLieu')}
         options={{
           title: 'Tài liệu',
           headerTitleText: 'Tài liệu',
