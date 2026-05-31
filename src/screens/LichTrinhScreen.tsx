@@ -484,6 +484,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         padding: 20,
         alignItems: 'center',
+        marginTop: -100, // Shift up to avoid keyboard overlap
         ...Platform.select({
             ios: {
                 shadowColor: '#000000',
