@@ -5,7 +5,6 @@ import { fetchUserData, saveUserData, fetchMonthlySchedule } from '../utils/supa
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { getEstronMonthRange, getEstronDays } from '../utils/dateUtils';
 import { Ionicons } from '@expo/vector-icons';
-import LichTrinhScreen from './LichTrinhScreen';
 
 export default function SanLuongScreen() {
     const navigation = useNavigation<any>();
@@ -16,7 +15,6 @@ export default function SanLuongScreen() {
     const [editingItem, setEditingItem] = useState<any>(null);
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [editValue, setEditValue] = useState('');
-    const [showLichTrinhModal, setShowLichTrinhModal] = useState(false);
 
     const loadData = useCallback(async () => {
         setLoading(true);
@@ -138,11 +136,6 @@ export default function SanLuongScreen() {
                         <Text style={styles.headerTitleLeft}>Sản lượng tháng {estronMonth}</Text>
                     </View>
                 ),
-                headerLeft: () => (
-                    <TouchableOpacity onPress={() => setShowLichTrinhModal(true)} style={styles.headerLeftButton}>
-                        <Ionicons name="calendar-outline" size={24} color="#FFFFFF" />
-                    </TouchableOpacity>
-                ),
                 headerRight: () => (
                     <View style={[styles.headerTitleRightContainer, { backgroundColor: valueColor }]}>
                         <Text style={styles.headerTitleRight}>
@@ -161,11 +154,7 @@ export default function SanLuongScreen() {
     useFocusEffect(
         useCallback(() => {
             loadData();
-            if (route.params?.openSchedule) {
-                setShowLichTrinhModal(true);
-                navigation.setParams({ openSchedule: undefined });
-            }
-        }, [loadData, route.params?.openSchedule, navigation])
+        }, [loadData])
     );
 
     const openEditModal = (day: any, item: any, type: 'sanluong' | 'hotro') => {
@@ -279,14 +268,6 @@ export default function SanLuongScreen() {
 
     return (
         <View style={styles.screen}>
-            <Modal
-                animationType="slide"
-                transparent={false}
-                visible={showLichTrinhModal}
-                onRequestClose={() => setShowLichTrinhModal(false)}
-            >
-                <LichTrinhScreen onClose={() => { setShowLichTrinhModal(false); loadData(); }} />
-            </Modal>
             {loading ? (
                 <View style={styles.centerContainer}>
                     <ActivityIndicator size="large" color="#007AFF" />
@@ -653,11 +634,5 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '600',
         color: '#FFFFFF',
-    },
-    headerLeftButton: {
-        paddingVertical: 6,
-        paddingHorizontal: 8,
-        justifyContent: 'center',
-        alignItems: 'center',
     },
 });

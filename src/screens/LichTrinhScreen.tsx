@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
     View,
     Text,
@@ -10,26 +10,80 @@ import {
     Modal,
     TextInput,
     Alert,
-    Pressable
+    Pressable,
+    ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getEstronMonthRange, getEstronDays } from '../utils/dateUtils';
-import { fetchMonthlySchedule, saveMonthlySchedule } from '../utils/supabase';
+import { fetchMonthlySchedule, saveMonthlySchedule, fetchUserData } from '../utils/supabase';
 
 interface LichTrinhScreenProps {
-    onClose: () => void;
+    onClose?: () => void;
 }
 
 export default function LichTrinhScreen({ onClose }: LichTrinhScreenProps) {
-    const { startDate, endDate, estronMonth, estronYear } = getEstronMonthRange();
-    const days = getEstronDays(startDate, endDate);
+    const navigation = useNavigation<any>();
+    const { startDate, endDate, estronMonth, estronYear } = useMemo(() => getEstronMonthRange(), []);
+    const days = useMemo(() => getEstronDays(startDate, endDate), [startDate, endDate]);
+
+    useEffect(() => {
+        if (!onClose) {
+            navigation.setOptions({
+                headerTitleText: `Lịch trình tháng ${estronMonth}`
+            });
+        }
+    }, [estronMonth, onClose, navigation]);
 
     // App state
     const [user, setUser] = useState<any>(null);
     const [schedule, setSchedule] = useState<Record<string, number | string>>({});
+    const [userData, setUserData] = useState<any>(null);
+    const [selectedStage, setSelectedStage] = useState<string>('');
+    const [showStageModal, setShowStageModal] = useState(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        if (userData && userData.nangSuat && !selectedStage) {
+            const { nangSuat, congDoan } = userData;
+            let latestItem: { dateStr: string; maCongDoan: string } | null = null;
+            let maxTimestamp = "";
+
+            for (const [dateStr, dayData] of Object.entries(nangSuat)) {
+                const detail = dayData as any;
+                if (detail && Array.isArray(detail.sanLuong)) {
+                    for (const item of detail.sanLuong) {
+                        if (item.timestamp && item.timestamp > maxTimestamp) {
+                            maxTimestamp = item.timestamp;
+                            latestItem = { dateStr, maCongDoan: item.maCongDoan };
+                        }
+                    }
+                }
+            }
+
+            if (!latestItem) {
+                const datesWithInput = Object.keys(nangSuat).filter(d => {
+                    const detail = nangSuat[d];
+                    return detail && detail.sanLuong && detail.sanLuong.length > 0;
+                });
+                if (datesWithInput.length > 0) {
+                    datesWithInput.sort();
+                    const latestDate = datesWithInput[datesWithInput.length - 1];
+                    const sanLuong = nangSuat[latestDate].sanLuong;
+                    const latestMa = sanLuong[sanLuong.length - 1].maCongDoan;
+                    latestItem = { dateStr: latestDate, maCongDoan: latestMa };
+                }
+            }
+
+            if (latestItem) {
+                setSelectedStage(latestItem.maCongDoan);
+            } else if (congDoan && congDoan.length > 0) {
+                setSelectedStage(congDoan[0].maCongDoan);
+            }
+        }
+    }, [userData, selectedStage]);
 
     // Edit Modal state
     const [showEditModal, setShowEditModal] = useState(false);
@@ -53,34 +107,43 @@ export default function LichTrinhScreen({ onClose }: LichTrinhScreenProps) {
         gridDays.push('');
     }
 
-    useEffect(() => {
-        const loadData = async () => {
-            try {
-                const userStr = await AsyncStorage.getItem('user');
-                if (userStr) {
-                    const parsedUser = JSON.parse(userStr);
-                    setUser(parsedUser);
-                    
-                    const monthlySchedule = await fetchMonthlySchedule(
+    const loadData = useCallback(async () => {
+        setLoading(true);
+        try {
+            const userStr = await AsyncStorage.getItem('user');
+            if (userStr) {
+                const parsedUser = JSON.parse(userStr);
+                setUser(parsedUser);
+                
+                const [monthlySchedule, uData] = await Promise.all([
+                    fetchMonthlySchedule(
                         parsedUser.id,
                         estronYear,
                         estronMonth,
                         startDate,
                         endDate
-                    );
-                    if (monthlySchedule) {
-                        setSchedule(monthlySchedule);
-                    }
+                    ),
+                    fetchUserData(parsedUser)
+                ]);
+                if (monthlySchedule) {
+                    setSchedule(monthlySchedule);
                 }
-            } catch (err) {
-                console.error("Error loading schedule:", err);
-            } finally {
-                setLoading(false);
+                if (uData) {
+                    setUserData(uData);
+                }
             }
-        };
-        
-        loadData();
-    }, []);
+        } catch (err) {
+            console.error("Error loading schedule/user data:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, [estronYear, estronMonth, startDate, endDate]);
+
+    useFocusEffect(
+        useCallback(() => {
+            loadData();
+        }, [loadData])
+    );
 
     const isToday = (dateStr: string) => {
         const today = new Date();
@@ -140,16 +203,135 @@ export default function LichTrinhScreen({ onClose }: LichTrinhScreenProps) {
         }
     };
 
+    // Forecast Calculation
+    const getForecast = () => {
+        if (!userData || !userData.nangSuat || !userData.congDoan) {
+            return { hasData: false, unitCount: 0, pcsCount: 0, unitLabel: 'hộp', text: "Chưa có dữ liệu", detailsText: "" };
+        }
+
+        const { nangSuat, congDoan } = userData;
+
+        // 1. Identify the most recent input item (only to determine the date range start date!)
+        let latestItem: { dateStr: string; maCongDoan: string } | null = null;
+        let maxTimestamp = "";
+
+        for (const [dateStr, dayData] of Object.entries(nangSuat)) {
+            const detail = dayData as any;
+            if (detail && Array.isArray(detail.sanLuong)) {
+                for (const item of detail.sanLuong) {
+                    if (item.timestamp && item.timestamp > maxTimestamp) {
+                        maxTimestamp = item.timestamp;
+                        latestItem = { dateStr, maCongDoan: item.maCongDoan };
+                    }
+                }
+            }
+        }
+
+        // Fallback to lexicographically latest date if timestamps are missing
+        if (!latestItem) {
+            const datesWithInput = Object.keys(nangSuat).filter(d => {
+                const detail = nangSuat[d];
+                return detail && detail.sanLuong && detail.sanLuong.length > 0;
+            });
+            if (datesWithInput.length > 0) {
+                datesWithInput.sort();
+                const latestDate = datesWithInput[datesWithInput.length - 1];
+                const sanLuong = nangSuat[latestDate].sanLuong;
+                const latestMa = sanLuong[sanLuong.length - 1].maCongDoan;
+                latestItem = { dateStr: latestDate, maCongDoan: latestMa };
+            }
+        }
+
+        if (!latestItem || !selectedStage) {
+            return { hasData: false, unitCount: 0, pcsCount: 0, unitLabel: 'hộp', text: "Chưa có dữ liệu nhập liệu để dự tính.", detailsText: "" };
+        }
+
+        const latestDateStr = latestItem.dateStr;
+
+        // 2. Find quota (dinhMuc) of selectedStage
+        const congDoanItem = congDoan.find((cd: any) => cd.maCongDoan === selectedStage);
+        if (!congDoanItem) {
+            return { hasData: false, unitCount: 0, pcsCount: 0, unitLabel: 'hộp', text: `Không tìm thấy định mức cho mã công đoạn ${selectedStage}.`, detailsText: "" };
+        }
+        const dinhMucX = congDoanItem.dinhMuc;
+
+        // Determine divisor and unit label based on stage prefix
+        let divisor = 270;
+        let unitLabel = "hộp";
+        if (selectedStage.startsWith('4') || selectedStage.startsWith('5')) {
+            divisor = 270;
+            unitLabel = "hộp";
+        } else if (selectedStage.startsWith('9')) {
+            divisor = 32;
+            unitLabel = "rổ";
+        } else {
+            divisor = 270;
+            unitLabel = "hộp";
+        }
+
+        // 3. Sum working minutes from the next day after latestDateStr to endDate
+        const [y, m, d] = latestDateStr.split('-').map(Number);
+        const nextDay = new Date(y, m - 1, d);
+        nextDay.setDate(nextDay.getDate() + 1);
+
+        let A = 0;
+        let current = new Date(nextDay);
+        while (current <= endDate) {
+            const yyyy = current.getFullYear();
+            const mm = String(current.getMonth() + 1).padStart(2, '0');
+            const dd = String(current.getDate()).padStart(2, '0');
+            const dateStr = `${yyyy}-${mm}-${dd}`;
+
+            let dailyMins = 0;
+            if (schedule && schedule[dateStr] !== undefined) {
+                const val = schedule[dateStr];
+                dailyMins = val === 'Nghỉ' ? 0 : Number(val);
+            } else {
+                // Fallback default
+                const dayOfWeek = current.getDay();
+                if (dayOfWeek === 0) dailyMins = 0;
+                else if (dayOfWeek === 6) dailyMins = 240;
+                else dailyMins = 480;
+            }
+            A += dailyMins;
+            current.setDate(current.getDate() + 1);
+        }
+
+        // 4. Calculate S
+        const S = ((A / 480) * dinhMucX) / divisor;
+        let unitCount = Math.floor(S);
+        let pcsCount = Math.round((S - unitCount) * divisor);
+        if (pcsCount === divisor) {
+            unitCount += 1;
+            pcsCount = 0;
+        }
+
+        return {
+            hasData: true,
+            X: selectedStage,
+            A,
+            S,
+            unitCount,
+            pcsCount,
+            unitLabel,
+            detailsText: `(Ngày công còn lại là ${(A / 480).toFixed(1)} công từ sau ngày ${d}/${m}/${y})`
+        };
+    };
+
+    const Container = onClose ? SafeAreaView : View;
+
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <Container style={styles.safeArea}>
             {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={onClose} style={styles.backButton}>
-                    <Ionicons name="close-outline" size={26} color="#007AFF" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Lịch trình tháng {estronMonth}/{estronYear}</Text>
-                <View style={styles.headerRightPlaceholder} />
-            </View>
+            {onClose && (
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={onClose} style={styles.backButton}>
+                        <Ionicons name="close-outline" size={26} color="#007AFF" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Lịch trình tháng {estronMonth}/{estronYear}</Text>
+                    <View style={styles.headerRightPlaceholder} />
+                </View>
+            )}
 
             {loading ? (
                 <View style={styles.centerContainer}>
@@ -236,8 +418,84 @@ export default function LichTrinhScreen({ onClose }: LichTrinhScreenProps) {
                             }
                         })}
                     </View>
+
+                    {/* Forecast block */}
+                    {(() => {
+                        const forecast = getForecast();
+                        return (
+                            <View style={styles.forecastContainer}>
+                                <Text style={styles.forecastLabel}>Dự tính sản lượng còn lại</Text>
+                                <View style={styles.forecastValueRow}>
+                                    <Text style={styles.forecastValueText}>
+                                        Sản lượng còn lại của công đoạn{' '}
+                                        <Text 
+                                            style={styles.stageSelectText}
+                                            onPress={() => setShowStageModal(true)}
+                                        >
+                                            {selectedStage || '...'} <Ionicons name="chevron-down" size={12} color="#007AFF" />
+                                        </Text>
+                                        {' '}là{' '}
+                                        <Text style={styles.forecastHighlight}>
+                                            {forecast.unitCount} {forecast.unitLabel} {forecast.pcsCount} pcs
+                                        </Text>
+                                    </Text>
+                                </View>
+                                {forecast.hasData && (
+                                    <Text style={styles.forecastSubtext}>{forecast.detailsText}</Text>
+                                )}
+                            </View>
+                        );
+                    })()}
                 </View>
             )}
+
+            {/* Modal Chọn Công Đoạn Dự Tính */}
+            <Modal
+                visible={showStageModal}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowStageModal(false)}
+            >
+                <Pressable style={styles.modalOverlay} onPress={() => setShowStageModal(false)}>
+                    <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+                        <Text style={styles.modalTitle}>Chọn công đoạn dự tính</Text>
+                        <ScrollView style={styles.stageList} showsVerticalScrollIndicator={false}>
+                            {userData?.congDoan?.map((cd: any) => {
+                                const isSelected = cd.maCongDoan === selectedStage;
+                                return (
+                                    <TouchableOpacity
+                                        key={cd.maCongDoan}
+                                        style={[
+                                            styles.stageItem,
+                                            isSelected && styles.stageItemActive
+                                        ]}
+                                        onPress={() => {
+                                            setSelectedStage(cd.maCongDoan);
+                                            setShowStageModal(false);
+                                        }}
+                                    >
+                                        <Text style={[
+                                            styles.stageItemText,
+                                            isSelected && styles.stageItemTextActive
+                                        ]}>
+                                            Công đoạn {cd.maCongDoan} (Định mức: {cd.dinhMuc})
+                                        </Text>
+                                        {isSelected && (
+                                            <Ionicons name="checkmark-sharp" size={20} color="#007AFF" />
+                                        )}
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </ScrollView>
+                        <TouchableOpacity
+                            style={styles.modalBtnClose}
+                            onPress={() => setShowStageModal(false)}
+                        >
+                            <Text style={styles.modalBtnTextClose}>Đóng</Text>
+                        </TouchableOpacity>
+                    </Pressable>
+                </Pressable>
+            </Modal>
 
             {/* Custom Edit Schedule Modal */}
             <Modal
@@ -320,7 +578,7 @@ export default function LichTrinhScreen({ onClose }: LichTrinhScreenProps) {
                     </Pressable>
                 </Pressable>
             </Modal>
-        </SafeAreaView>
+        </Container>
     );
 }
 
@@ -609,5 +867,104 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '600',
         color: '#ffffff',
+    },
+    forecastContainer: {
+        marginTop: 20,
+        padding: 16,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#E5E5EA',
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 4,
+            },
+            android: {
+                elevation: 1,
+            },
+            web: {
+                boxShadow: '0px 2px 8px rgba(0,0,0,0.05)',
+            }
+        }),
+    },
+    forecastLabel: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#8E8E93',
+        marginBottom: 6,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+    forecastValue: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#007AFF',
+    },
+    forecastSubtext: {
+        marginTop: 4,
+        fontSize: 11,
+        color: '#8E8E93',
+        fontStyle: 'italic',
+    },
+    forecastValueRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        marginTop: 4,
+    },
+    forecastValueText: {
+        fontSize: 15,
+        color: '#1C1C1E',
+        lineHeight: 22,
+    },
+    stageSelectText: {
+        color: '#007AFF',
+        fontWeight: '700',
+        textDecorationLine: 'underline',
+    },
+    forecastHighlight: {
+        fontWeight: '700',
+        color: '#000000',
+    },
+    stageList: {
+        width: '100%',
+        maxHeight: 250,
+        marginVertical: 16,
+    },
+    stageItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: '#E5E5EA',
+    },
+    stageItemActive: {
+        backgroundColor: '#F2F2F7',
+    },
+    stageItemText: {
+        fontSize: 16,
+        color: '#000000',
+    },
+    stageItemTextActive: {
+        color: '#007AFF',
+        fontWeight: '600',
+    },
+    modalBtnClose: {
+        width: '100%',
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        backgroundColor: '#F2F2F7',
+        marginTop: 8,
+    },
+    modalBtnTextClose: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#007AFF',
     },
 });

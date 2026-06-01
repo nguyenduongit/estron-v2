@@ -5,11 +5,12 @@ import { PanResponder, View } from 'react-native';
 import NhapLieuScreen from '../screens/NhapLieuScreen';
 import SanLuongScreen from '../screens/SanLuongScreen';
 import CongTuanScreen from '../screens/CongTuanScreen';
-import TaiLieuScreen from '../screens/TaiLieuScreen';
+import LichTrinhScreen from '../screens/LichTrinhScreen';
+// import TaiLieuScreen from '../screens/TaiLieuScreen';
 import CustomHeader from '../components/layout/CustomHeader';
 import CustomTabNavigator from '../components/layout/CustomTabNavigator';
 
-const TAB_ROUTES = ['NhapLieu', 'SanLuong', 'CongTuan', 'TaiLieu'];
+const TAB_ROUTES = ['NhapLieu', 'SanLuong', 'CongTuan', 'LichTrinh'];
 
 interface SwipeableScreenWrapperProps {
   children: React.ReactNode;
@@ -131,14 +132,14 @@ export default function TabNavigator() {
         } as any}
       />
       <Tab.Screen
-        name="TaiLieu"
-        component={SwipeableScreen(TaiLieuScreen, 'TaiLieu')}
+        name="LichTrinh"
+        component={SwipeableScreen(LichTrinhScreen, 'LichTrinh')}
         options={{
-          title: 'Tài liệu',
-          headerTitleText: 'Tài liệu',
-          tabBarLabel: 'Tài liệu',
+          title: 'Lịch trình',
+          headerTitleText: 'Lịch trình',
+          tabBarLabel: 'Lịch trình',
           tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-            <Ionicons name="document-text-outline" size={size} color={color} />
+            <Ionicons name="calendar-clear-outline" size={size} color={color} />
           ),
         } as any}
       />

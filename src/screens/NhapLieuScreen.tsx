@@ -135,7 +135,7 @@ export default function NhapLieuScreen() {
         if (Platform.OS === 'web') {
             const goToSchedule = window.confirm(message + "\n\nBạn có muốn di chuyển đến Lịch trình tháng?");
             if (goToSchedule) {
-                navigation.navigate('SanLuong', { openSchedule: true });
+                navigation.navigate('LichTrinh');
             }
         } else {
             Alert.alert(
@@ -146,7 +146,7 @@ export default function NhapLieuScreen() {
                     { 
                         text: "Đến Lịch trình tháng", 
                         onPress: () => {
-                            navigation.navigate('SanLuong', { openSchedule: true });
+                            navigation.navigate('LichTrinh');
                         }
                     }
                 ]
