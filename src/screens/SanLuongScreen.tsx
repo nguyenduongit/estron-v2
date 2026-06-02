@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         paddingTop: 16,
-        paddingBottom: 40,
+        paddingBottom: Platform.OS === 'web' ? 80 : 100,
     },
     card: {
         backgroundColor: '#FFFFFF',

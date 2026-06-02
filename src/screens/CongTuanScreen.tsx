@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchUserData } from '../utils/supabase';
 import { useFocusEffect } from '@react-navigation/native';
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         paddingTop: 16,
-        paddingBottom: 40,
+        paddingBottom: Platform.OS === 'web' ? 80 : 100,
     },
     card: {
         backgroundColor: '#FFFFFF',

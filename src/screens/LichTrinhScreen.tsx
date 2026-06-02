@@ -625,6 +625,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
+        paddingBottom: Platform.OS === 'web' ? 80 : 100,
         justifyContent: 'flex-start',
     },
     weekdayRow: {
