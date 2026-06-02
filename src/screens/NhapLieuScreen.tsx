@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Platform, Alert, ActivityIndicator, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -36,6 +35,13 @@ export default function NhapLieuScreen() {
     const [showAddModal, setShowAddModal] = useState(false);
     const [newMa, setNewMa] = useState('');
     const [newDinhMuc, setNewDinhMuc] = useState('');
+
+    // Custom Picker & Edit Stage Modal States
+    const [showListModal, setShowListModal] = useState(false);
+    const [showEditStageModal, setShowEditStageModal] = useState(false);
+    const [editingStageItem, setEditingStageItem] = useState<CongDoan | null>(null);
+    const [editStageMa, setEditStageMa] = useState('');
+    const [editStageDinhMuc, setEditStageDinhMuc] = useState('');
 
     const loadUserData = useCallback(async (targetDate: Date) => {
         setIsLoadingData(true);
@@ -185,6 +191,111 @@ export default function NhapLieuScreen() {
         setNewDinhMuc('');
     };
 
+    const handleLongPressStage = (item: CongDoan) => {
+        setShowListModal(false);
+        setEditingStageItem(item);
+        setEditStageMa(item.maCongDoan);
+        setEditStageDinhMuc(item.dinhMuc.toString());
+        setShowEditStageModal(true);
+    };
+
+    const handleUpdateStage = async () => {
+        if (!editingStageItem) return;
+        if (!editStageMa || !editStageDinhMuc) {
+            Platform.OS === 'web' ? alert('Vui lòng nhập đủ thông tin') : Alert.alert('Lỗi', 'Vui lòng nhập đủ thông tin');
+            return;
+        }
+
+        const norm = Number(editStageDinhMuc);
+        if (isNaN(norm)) {
+            Platform.OS === 'web' ? alert('Định mức phải là số') : Alert.alert('Lỗi', 'Định mức phải là số');
+            return;
+        }
+
+        const updatedList = danhSachCongDoan.map((cd) => {
+            if (cd.maCongDoan === editingStageItem.maCongDoan) {
+                return { maCongDoan: editStageMa.trim(), dinhMuc: norm };
+            }
+            return cd;
+        });
+
+        setDanhSachCongDoan(updatedList);
+        if (maCongDoan === editingStageItem.maCongDoan) {
+            setMaCongDoan(editStageMa.trim());
+        }
+
+        const updatedData = { ...fullData, congDoan: updatedList };
+        setFullData(updatedData);
+
+        try {
+            await saveUserData(user, updatedData);
+            if (Platform.OS === 'web') {
+                alert('Cập nhật công đoạn thành công!');
+            } else {
+                Alert.alert('Thành công', 'Đã cập nhật công đoạn!');
+            }
+        } catch (e) {
+            console.error("Update cong doan error:", e);
+        }
+
+        setShowEditStageModal(false);
+        setEditingStageItem(null);
+    };
+
+    const handleDeleteStage = async () => {
+        if (!editingStageItem) return;
+
+        const performDelete = async () => {
+            const updatedList = danhSachCongDoan.filter(
+                (cd) => cd.maCongDoan !== editingStageItem.maCongDoan
+            );
+
+            setDanhSachCongDoan(updatedList);
+            if (maCongDoan === editingStageItem.maCongDoan) {
+                if (updatedList.length > 0) {
+                    setMaCongDoan(updatedList[0].maCongDoan);
+                } else {
+                    setMaCongDoan('');
+                }
+            }
+
+            const updatedData = { ...fullData, congDoan: updatedList };
+            setFullData(updatedData);
+
+            try {
+                await saveUserData(user, updatedData);
+                if (Platform.OS === 'web') {
+                    alert('Xóa công đoạn thành công!');
+                } else {
+                    Alert.alert('Thành công', 'Đã xóa công đoạn!');
+                }
+            } catch (e) {
+                console.error("Delete cong doan error:", e);
+            }
+
+            setShowEditStageModal(false);
+            setEditingStageItem(null);
+        };
+
+        const message = `Bạn có chắc chắn muốn xóa công đoạn "${editingStageItem.maCongDoan}" không?`;
+
+        if (Platform.OS === 'web') {
+            const confirmDelete = window.confirm(message);
+            if (confirmDelete) {
+                await performDelete();
+            }
+        } else {
+            Alert.alert(
+                "Xác nhận xóa",
+                message,
+                [
+                    { text: "Hủy", style: "cancel" },
+                    { text: "Xóa", style: "destructive", onPress: performDelete }
+                ]
+            );
+        }
+    };
+
     const handleSave = async () => {
         if (!soLuong) {
             Platform.OS === 'web' ? alert('Vui lòng nhập số lượng') : Alert.alert('Lỗi', 'Vui lòng nhập số lượng');
@@ -309,21 +420,23 @@ export default function NhapLieuScreen() {
                     <View style={styles.row}>
                         <Text style={styles.label}>Công đoạn</Text>
                         <View style={styles.valueContainer}>
-                            <View style={styles.pickerWrapper}>
-                                {danhSachCongDoan.length > 0 ? (
-                                    <Picker
-                                        selectedValue={maCongDoan}
-                                        onValueChange={(itemValue) => setMaCongDoan(itemValue)}
-                                        style={styles.picker}
-                                    >
-                                        {danhSachCongDoan.map((cd) => (
-                                            <Picker.Item key={cd.maCongDoan} label={cd.maCongDoan} value={cd.maCongDoan} />
-                                        ))}
-                                    </Picker>
-                                ) : (
-                                    <Text style={{ color: '#8E8E93', marginRight: 8, fontSize: 17 }}>Chưa có mã</Text>
-                                )}
-                            </View>
+                            {danhSachCongDoan.length > 0 ? (
+                                <TouchableOpacity
+                                    style={styles.pickerTouch}
+                                    onPress={() => setShowListModal(true)}
+                                >
+                                    <Text style={styles.pickerText}>{maCongDoan || 'Chọn mã'}</Text>
+                                    <Ionicons name="chevron-down" size={16} color="#007AFF" style={styles.chevronIcon} />
+                                </TouchableOpacity>
+                            ) : (
+                                <TouchableOpacity
+                                    style={styles.pickerTouch}
+                                    onPress={() => setShowAddModal(true)}
+                                >
+                                    <Text style={styles.pickerPlaceholder}>Chưa có mã</Text>
+                                    <Ionicons name="add-circle" size={16} color="#8E8E93" style={styles.chevronIcon} />
+                                </TouchableOpacity>
+                            )}
                             <TouchableOpacity onPress={() => setShowAddModal(true)} style={styles.iconButton}>
                                 <Ionicons name="add-circle" size={22} color="#007AFF" />
                             </TouchableOpacity>
@@ -448,6 +561,130 @@ export default function NhapLieuScreen() {
                     </View>
                 </View>
             </Modal>
+
+            {/* Modal Chọn Công Đoạn */}
+            <Modal visible={showListModal} transparent={true} animationType="slide">
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContentLarge}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Chọn công đoạn</Text>
+                            <TouchableOpacity onPress={() => setShowListModal(false)} style={styles.modalCloseBtn}>
+                                <Ionicons name="close" size={24} color="#8E8E93" />
+                            </TouchableOpacity>
+                        </View>
+                        <Text style={styles.modalSubTitle}>Nhấn để chọn, nhấn giữ để chỉnh sửa/xóa</Text>
+                        
+                        {danhSachCongDoan.length === 0 ? (
+                            <View style={styles.emptyContainer}>
+                                <Text style={styles.emptyText}>Chưa có công đoạn nào. Hãy thêm mới!</Text>
+                            </View>
+                        ) : (
+                            <ScrollView style={styles.stageList} showsVerticalScrollIndicator={true}>
+                                {danhSachCongDoan.map((item) => (
+                                    <TouchableOpacity
+                                        key={item.maCongDoan}
+                                        style={[
+                                            styles.stageItem,
+                                            maCongDoan === item.maCongDoan && styles.stageItemActive
+                                        ]}
+                                        onPress={() => {
+                                            setMaCongDoan(item.maCongDoan);
+                                            setShowListModal(false);
+                                        }}
+                                        onLongPress={() => handleLongPressStage(item)}
+                                        delayLongPress={500}
+                                    >
+                                        <Text style={[
+                                            styles.stageItemText,
+                                            maCongDoan === item.maCongDoan && styles.stageItemTextActive
+                                        ]}>
+                                            Mã: {item.maCongDoan}
+                                        </Text>
+                                        <Text style={[
+                                            styles.stageItemQuota,
+                                            maCongDoan === item.maCongDoan && styles.stageItemQuotaActive
+                                        ]}>
+                                            Định mức: {item.dinhMuc}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
+                        )}
+                        
+                        <TouchableOpacity
+                            style={styles.modalAddButtonInline}
+                            onPress={() => {
+                                setShowListModal(false);
+                                setShowAddModal(true);
+                            }}
+                        >
+                            <Ionicons name="add" size={20} color="#FFF" style={{ marginRight: 4 }} />
+                            <Text style={styles.modalAddButtonInlineText}>Thêm công đoạn mới</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Modal Sửa/Xóa Công Đoạn */}
+            <Modal visible={showEditStageModal} transparent={true} animationType="fade">
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Chỉnh sửa công đoạn</Text>
+                        
+                        <View style={styles.modalInputGroup}>
+                            <Text style={styles.modalLabel}>Mã công đoạn</Text>
+                            <TextInput
+                                style={styles.modalInput}
+                                placeholder="Ví dụ: 5.2"
+                                placeholderTextColor="#C7C7CC"
+                                value={editStageMa}
+                                onChangeText={setEditStageMa}
+                            />
+                        </View>
+                        
+                        <View style={styles.modalInputGroup}>
+                            <Text style={styles.modalLabel}>Định mức</Text>
+                            <TextInput
+                                style={styles.modalInput}
+                                placeholder="Ví dụ: 1135"
+                                placeholderTextColor="#C7C7CC"
+                                value={editStageDinhMuc}
+                                onChangeText={setEditStageDinhMuc}
+                                keyboardType="numeric"
+                            />
+                        </View>
+                        
+                        <View style={styles.modalActionsRow}>
+                            <TouchableOpacity
+                                style={styles.modalBtnDelete}
+                                onPress={handleDeleteStage}
+                            >
+                                <Ionicons name="trash-outline" size={18} color="#FFF" style={{ marginRight: 4 }} />
+                                <Text style={styles.modalBtnTextDelete}>Xóa</Text>
+                            </TouchableOpacity>
+                            
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <TouchableOpacity
+                                    style={styles.modalBtnCancel}
+                                    onPress={() => {
+                                        setShowEditStageModal(false);
+                                        setEditingStageItem(null);
+                                    }}
+                                >
+                                    <Text style={styles.modalBtnTextCancel}>Hủy</Text>
+                                </TouchableOpacity>
+                                
+                                <TouchableOpacity
+                                    style={styles.modalBtnSave}
+                                    onPress={handleUpdateStage}
+                                >
+                                    <Text style={styles.modalBtnTextSave}>Lưu</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -510,25 +747,130 @@ const styles = StyleSheet.create({
         paddingLeft: 8,
         paddingRight: 0,
     },
-    pickerWrapper: {
-        flex: 1,
-        minWidth: 0,
-        ...(Platform.OS === 'web' && {
-            borderWidth: 0,
-        }),
+    pickerTouch: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        backgroundColor: '#E5F1FF',
+        borderRadius: 8,
+        minWidth: 100,
+        marginRight: 4,
     },
-    picker: {
-        width: '100%',
+    pickerText: {
+        fontSize: 17,
         color: '#007AFF',
-        ...(Platform.OS === 'web' && {
-            border: 'none',
-            backgroundColor: 'transparent',
-            fontSize: 17,
-            textAlign: 'right',
-            direction: 'rtl',
-            outline: 'none',
-            appearance: 'none',
-        }),
+        fontWeight: '600',
+        marginRight: 4,
+    },
+    pickerPlaceholder: {
+        fontSize: 17,
+        color: '#8E8E93',
+        marginRight: 4,
+    },
+    chevronIcon: {
+        marginLeft: 2,
+    },
+    modalContentLarge: {
+        backgroundColor: '#fff',
+        borderRadius: 14,
+        width: '100%',
+        maxWidth: 360,
+        padding: 20,
+        maxHeight: '80%',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    modalCloseBtn: {
+        padding: 4,
+    },
+    modalSubTitle: {
+        fontSize: 13,
+        color: '#8E8E93',
+        marginBottom: 16,
+        fontStyle: 'italic',
+        textAlign: 'center',
+    },
+    emptyContainer: {
+        paddingVertical: 32,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    emptyText: {
+        fontSize: 15,
+        color: '#8E8E93',
+        textAlign: 'center',
+    },
+    stageList: {
+        maxHeight: 300,
+        marginBottom: 16,
+    },
+    stageItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: '#E5E5EA',
+    },
+    stageItemActive: {
+        backgroundColor: '#E5F1FF',
+        borderRadius: 8,
+    },
+    stageItemText: {
+        fontSize: 16,
+        color: '#000',
+        fontWeight: '500',
+    },
+    stageItemTextActive: {
+        color: '#007AFF',
+        fontWeight: '600',
+    },
+    stageItemQuota: {
+        fontSize: 14,
+        color: '#8E8E93',
+    },
+    stageItemQuotaActive: {
+        color: '#007AFF',
+    },
+    modalAddButtonInline: {
+        backgroundColor: '#34C759',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 8,
+        paddingVertical: 12,
+    },
+    modalAddButtonInlineText: {
+        color: '#FFF',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    modalActionsRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 20,
+    },
+    modalBtnDelete: {
+        backgroundColor: '#FF3B30',
+        borderRadius: 8,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    modalBtnTextDelete: {
+        fontSize: 16,
+        color: '#FFF',
+        fontWeight: '600',
     },
     infoText: {
         flex: 1,
