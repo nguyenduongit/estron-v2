@@ -421,9 +421,12 @@ export default function NhapLieuScreen() {
                         <Text style={styles.label}>Công đoạn</Text>
                         <View style={styles.valueContainer}>
                             {danhSachCongDoan.length > 0 ? (
-                                <View style={{ position: 'relative', zIndex: 11 }}>
+                                <View style={{ position: 'relative', zIndex: 11, marginRight: 4 }}>
                                     <TouchableOpacity
-                                        style={styles.pickerTouch}
+                                        style={[
+                                            styles.pickerTouch,
+                                            showDropdown && styles.pickerTouchOpen
+                                        ]}
                                         onPress={() => setShowDropdown(!showDropdown)}
                                     >
                                         <Text style={styles.pickerText}>{maCongDoan || 'Chọn mã'}</Text>
@@ -726,7 +729,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#E5F1FF',
         borderRadius: 8,
         minWidth: 100,
-        marginRight: 4,
+        borderWidth: 1,
+        borderColor: '#B3D7FF',
+    },
+    pickerTouchOpen: {
+        borderBottomLeftRadius: 0,
+        borderBottomRightRadius: 0,
+        borderBottomWidth: 0,
     },
     pickerText: {
         fontSize: 17,
@@ -744,18 +753,20 @@ const styles = StyleSheet.create({
     },
     dropdownListContainer: {
         position: 'absolute',
-        top: 38,
-        right: 4,
-        width: 100,
+        top: '100%',
+        left: 0,
+        right: 0,
         backgroundColor: '#FFFFFF',
-        borderRadius: 8,
+        borderBottomLeftRadius: 8,
+        borderBottomRightRadius: 8,
         borderWidth: 1,
-        borderColor: '#E5E5EA',
+        borderColor: '#B3D7FF',
+        borderTopWidth: 0,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 5,
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 3,
         zIndex: 9999,
         overflow: 'hidden',
     },
