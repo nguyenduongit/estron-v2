@@ -444,7 +444,7 @@ export default function NhapLieuScreen() {
                                                             style={[
                                                                 styles.dropdownItem,
                                                                 maCongDoan === item.maCongDoan && styles.dropdownItemActive,
-                                                                isLast && { borderBottomLeftRadius: 8, borderBottomRightRadius: 8, borderBottomWidth: 0 }
+                                                                isLast && { borderBottomLeftRadius: 8, borderBottomRightRadius: 8, borderBottomWidth: 0, overflow: 'hidden' }
                                                             ]}
                                                             onPress={() => {
                                                                 setMaCongDoan(item.maCongDoan);
@@ -779,6 +779,7 @@ const styles = StyleSheet.create({
         maxHeight: 200,
         borderBottomLeftRadius: 8,
         borderBottomRightRadius: 8,
+        overflow: 'hidden',
     },
     dropdownItem: {
         paddingVertical: 12,
