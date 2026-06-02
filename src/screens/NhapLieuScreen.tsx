@@ -22,7 +22,7 @@ export default function NhapLieuScreen() {
     const [danhSachCongDoan, setDanhSachCongDoan] = useState<CongDoan[]>([]);
     const [maCongDoan, setMaCongDoan] = useState('');
     const [soLuong, setSoLuong] = useState('');
-    
+
     // Support time and monthly schedule states
     const [thoiGianHoTro, setThoiGianHoTro] = useState('0');
     const [monthlySchedule, setMonthlySchedule] = useState<Record<string, number | string>>({});
@@ -37,7 +37,7 @@ export default function NhapLieuScreen() {
     const [newDinhMuc, setNewDinhMuc] = useState('');
 
     // Custom Picker & Edit Stage Modal States
-    const [showListModal, setShowListModal] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
     const [showEditStageModal, setShowEditStageModal] = useState(false);
     const [editingStageItem, setEditingStageItem] = useState<CongDoan | null>(null);
     const [editStageMa, setEditStageMa] = useState('');
@@ -52,7 +52,7 @@ export default function NhapLieuScreen() {
                 setUser(u);
 
                 const data: any = await fetchUserData(u, targetDate);
-                
+
                 // Fetch monthly schedule config
                 const { startDate, endDate, estronMonth, estronYear } = getEstronMonthRange(targetDate);
                 const sched = await fetchMonthlySchedule(u.id, estronYear, estronMonth, startDate, endDate);
@@ -118,7 +118,7 @@ export default function NhapLieuScreen() {
     const getCalculatedThucHien = () => {
         const dateStr = formatLocalDateStr(date);
         let scheduledMins = 480; // default fallback
-        
+
         if (monthlySchedule && monthlySchedule[dateStr] !== undefined) {
             const val = monthlySchedule[dateStr];
             scheduledMins = val === 'Nghỉ' ? 0 : Number(val);
@@ -149,8 +149,8 @@ export default function NhapLieuScreen() {
                 message,
                 [
                     { text: "Hủy", style: "cancel" },
-                    { 
-                        text: "Đến Lịch trình tháng", 
+                    {
+                        text: "Đến Lịch trình tháng",
                         onPress: () => {
                             navigation.navigate('LichTrinh');
                         }
@@ -192,7 +192,7 @@ export default function NhapLieuScreen() {
     };
 
     const handleLongPressStage = (item: CongDoan) => {
-        setShowListModal(false);
+        setShowDropdown(false);
         setEditingStageItem(item);
         setEditStageMa(item.maCongDoan);
         setEditStageDinhMuc(item.dinhMuc.toString());
@@ -417,17 +417,51 @@ export default function NhapLieuScreen() {
                     <View style={styles.divider} />
 
                     {/* Mã công đoạn */}
-                    <View style={styles.row}>
+                    <View style={[styles.row, { zIndex: 10 }]}>
                         <Text style={styles.label}>Công đoạn</Text>
                         <View style={styles.valueContainer}>
                             {danhSachCongDoan.length > 0 ? (
-                                <TouchableOpacity
-                                    style={styles.pickerTouch}
-                                    onPress={() => setShowListModal(true)}
-                                >
-                                    <Text style={styles.pickerText}>{maCongDoan || 'Chọn mã'}</Text>
-                                    <Ionicons name="chevron-down" size={16} color="#007AFF" style={styles.chevronIcon} />
-                                </TouchableOpacity>
+                                <View style={{ position: 'relative', zIndex: 11 }}>
+                                    <TouchableOpacity
+                                        style={styles.pickerTouch}
+                                        onPress={() => setShowDropdown(!showDropdown)}
+                                    >
+                                        <Text style={styles.pickerText}>{maCongDoan || 'Chọn mã'}</Text>
+                                        <Ionicons name={showDropdown ? "chevron-up" : "chevron-down"} size={16} color="#007AFF" style={styles.chevronIcon} />
+                                    </TouchableOpacity>
+
+                                    {showDropdown && (
+                                        <View style={styles.dropdownListContainer}>
+                                            <ScrollView style={styles.dropdownScrollView} nestedScrollEnabled={true}>
+                                                {danhSachCongDoan.map((item) => (
+                                                    <TouchableOpacity
+                                                        key={item.maCongDoan}
+                                                        style={[
+                                                            styles.dropdownItem,
+                                                            maCongDoan === item.maCongDoan && styles.dropdownItemActive
+                                                        ]}
+                                                        onPress={() => {
+                                                            setMaCongDoan(item.maCongDoan);
+                                                            setShowDropdown(false);
+                                                        }}
+                                                        onLongPress={() => {
+                                                            setShowDropdown(false);
+                                                            handleLongPressStage(item);
+                                                        }}
+                                                        delayLongPress={500}
+                                                    >
+                                                        <Text style={[
+                                                            styles.dropdownItemText,
+                                                            maCongDoan === item.maCongDoan && styles.dropdownItemTextActive
+                                                        ]}>
+                                                            {item.maCongDoan}
+                                                        </Text>
+                                                    </TouchableOpacity>
+                                                ))}
+                                            </ScrollView>
+                                        </View>
+                                    )}
+                                </View>
                             ) : (
                                 <TouchableOpacity
                                     style={styles.pickerTouch}
@@ -562,75 +596,12 @@ export default function NhapLieuScreen() {
                 </View>
             </Modal>
 
-            {/* Modal Chọn Công Đoạn */}
-            <Modal visible={showListModal} transparent={true} animationType="slide">
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContentLarge}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Chọn công đoạn</Text>
-                            <TouchableOpacity onPress={() => setShowListModal(false)} style={styles.modalCloseBtn}>
-                                <Ionicons name="close" size={24} color="#8E8E93" />
-                            </TouchableOpacity>
-                        </View>
-                        <Text style={styles.modalSubTitle}>Nhấn để chọn, nhấn giữ để chỉnh sửa/xóa</Text>
-                        
-                        {danhSachCongDoan.length === 0 ? (
-                            <View style={styles.emptyContainer}>
-                                <Text style={styles.emptyText}>Chưa có công đoạn nào. Hãy thêm mới!</Text>
-                            </View>
-                        ) : (
-                            <ScrollView style={styles.stageList} showsVerticalScrollIndicator={true}>
-                                {danhSachCongDoan.map((item) => (
-                                    <TouchableOpacity
-                                        key={item.maCongDoan}
-                                        style={[
-                                            styles.stageItem,
-                                            maCongDoan === item.maCongDoan && styles.stageItemActive
-                                        ]}
-                                        onPress={() => {
-                                            setMaCongDoan(item.maCongDoan);
-                                            setShowListModal(false);
-                                        }}
-                                        onLongPress={() => handleLongPressStage(item)}
-                                        delayLongPress={500}
-                                    >
-                                        <Text style={[
-                                            styles.stageItemText,
-                                            maCongDoan === item.maCongDoan && styles.stageItemTextActive
-                                        ]}>
-                                            Mã: {item.maCongDoan}
-                                        </Text>
-                                        <Text style={[
-                                            styles.stageItemQuota,
-                                            maCongDoan === item.maCongDoan && styles.stageItemQuotaActive
-                                        ]}>
-                                            Định mức: {item.dinhMuc}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </ScrollView>
-                        )}
-                        
-                        <TouchableOpacity
-                            style={styles.modalAddButtonInline}
-                            onPress={() => {
-                                setShowListModal(false);
-                                setShowAddModal(true);
-                            }}
-                        >
-                            <Ionicons name="add" size={20} color="#FFF" style={{ marginRight: 4 }} />
-                            <Text style={styles.modalAddButtonInlineText}>Thêm công đoạn mới</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
-
             {/* Modal Sửa/Xóa Công Đoạn */}
             <Modal visible={showEditStageModal} transparent={true} animationType="fade">
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Chỉnh sửa công đoạn</Text>
-                        
+
                         <View style={styles.modalInputGroup}>
                             <Text style={styles.modalLabel}>Mã công đoạn</Text>
                             <TextInput
@@ -641,7 +612,7 @@ export default function NhapLieuScreen() {
                                 onChangeText={setEditStageMa}
                             />
                         </View>
-                        
+
                         <View style={styles.modalInputGroup}>
                             <Text style={styles.modalLabel}>Định mức</Text>
                             <TextInput
@@ -653,7 +624,7 @@ export default function NhapLieuScreen() {
                                 keyboardType="numeric"
                             />
                         </View>
-                        
+
                         <View style={styles.modalActionsRow}>
                             <TouchableOpacity
                                 style={styles.modalBtnDelete}
@@ -662,7 +633,7 @@ export default function NhapLieuScreen() {
                                 <Ionicons name="trash-outline" size={18} color="#FFF" style={{ marginRight: 4 }} />
                                 <Text style={styles.modalBtnTextDelete}>Xóa</Text>
                             </TouchableOpacity>
-                            
+
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 <TouchableOpacity
                                     style={styles.modalBtnCancel}
@@ -673,7 +644,7 @@ export default function NhapLieuScreen() {
                                 >
                                     <Text style={styles.modalBtnTextCancel}>Hủy</Text>
                                 </TouchableOpacity>
-                                
+
                                 <TouchableOpacity
                                     style={styles.modalBtnSave}
                                     onPress={handleUpdateStage}
@@ -703,7 +674,6 @@ const styles = StyleSheet.create({
     formGroup: {
         backgroundColor: '#FFFFFF',
         borderRadius: 10,
-        overflow: 'hidden',
     },
     row: {
         flexDirection: 'row',
@@ -772,84 +742,42 @@ const styles = StyleSheet.create({
     chevronIcon: {
         marginLeft: 2,
     },
-    modalContentLarge: {
-        backgroundColor: '#fff',
-        borderRadius: 14,
-        width: '100%',
-        maxWidth: 360,
-        padding: 20,
-        maxHeight: '80%',
+    dropdownListContainer: {
+        position: 'absolute',
+        top: 38,
+        right: 4,
+        width: 100,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#E5E5EA',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 5,
+        zIndex: 9999,
+        overflow: 'hidden',
     },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 8,
+    dropdownScrollView: {
+        maxHeight: 200,
     },
-    modalCloseBtn: {
-        padding: 4,
-    },
-    modalSubTitle: {
-        fontSize: 13,
-        color: '#8E8E93',
-        marginBottom: 16,
-        fontStyle: 'italic',
-        textAlign: 'center',
-    },
-    emptyContainer: {
-        paddingVertical: 32,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    emptyText: {
-        fontSize: 15,
-        color: '#8E8E93',
-        textAlign: 'center',
-    },
-    stageList: {
-        maxHeight: 300,
-        marginBottom: 16,
-    },
-    stageItem: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+    dropdownItem: {
         paddingVertical: 12,
         paddingHorizontal: 16,
         borderBottomWidth: StyleSheet.hairlineWidth,
         borderBottomColor: '#E5E5EA',
+        backgroundColor: '#FFFFFF',
     },
-    stageItemActive: {
+    dropdownItemActive: {
         backgroundColor: '#E5F1FF',
-        borderRadius: 8,
     },
-    stageItemText: {
+    dropdownItemText: {
         fontSize: 16,
-        color: '#000',
-        fontWeight: '500',
+        color: '#000000',
     },
-    stageItemTextActive: {
+    dropdownItemTextActive: {
         color: '#007AFF',
-        fontWeight: '600',
-    },
-    stageItemQuota: {
-        fontSize: 14,
-        color: '#8E8E93',
-    },
-    stageItemQuotaActive: {
-        color: '#007AFF',
-    },
-    modalAddButtonInline: {
-        backgroundColor: '#34C759',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 8,
-        paddingVertical: 12,
-    },
-    modalAddButtonInlineText: {
-        color: '#FFF',
-        fontSize: 16,
         fontWeight: '600',
     },
     modalActionsRow: {
