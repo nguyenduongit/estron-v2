@@ -421,7 +421,7 @@ export default function NhapLieuScreen() {
                         <Text style={styles.label}>Công đoạn</Text>
                         <View style={styles.valueContainer}>
                             {danhSachCongDoan.length > 0 ? (
-                                <View style={{ position: 'relative', zIndex: 11, marginRight: 4 }}>
+                                <View style={{ position: 'relative', zIndex: 11, height: 36, marginRight: 4, justifyContent: 'center' }}>
                                     <TouchableOpacity
                                         style={[
                                             styles.pickerTouch,
@@ -723,8 +723,8 @@ const styles = StyleSheet.create({
     pickerTouch: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'flex-end',
-        paddingVertical: 6,
+        justifyContent: 'center',
+        height: 36,
         paddingHorizontal: 12,
         backgroundColor: '#E5F1FF',
         borderRadius: 8,
@@ -753,7 +753,7 @@ const styles = StyleSheet.create({
     },
     dropdownListContainer: {
         position: 'absolute',
-        top: '100%',
+        top: 35,
         left: 0,
         right: 0,
         backgroundColor: '#FFFFFF',
