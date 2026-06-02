@@ -430,37 +430,42 @@ export default function NhapLieuScreen() {
                                         onPress={() => setShowDropdown(!showDropdown)}
                                     >
                                         <Text style={styles.pickerText}>{maCongDoan || 'Chọn mã'}</Text>
-                                        <Ionicons name={showDropdown ? "chevron-up" : "chevron-down"} size={16} color="#007AFF" style={styles.chevronIcon} />
+                                        <Ionicons name={showDropdown ? "chevron-up" : "chevron-down"} size={16} color="#007AFF" style={[styles.chevronIcon, { position: 'absolute', right: 10 }]} />
                                     </TouchableOpacity>
 
                                     {showDropdown && (
                                         <View style={styles.dropdownListContainer}>
                                             <ScrollView style={styles.dropdownScrollView} nestedScrollEnabled={true}>
-                                                {danhSachCongDoan.map((item) => (
-                                                    <TouchableOpacity
-                                                        key={item.maCongDoan}
-                                                        style={[
-                                                            styles.dropdownItem,
-                                                            maCongDoan === item.maCongDoan && styles.dropdownItemActive
-                                                        ]}
-                                                        onPress={() => {
-                                                            setMaCongDoan(item.maCongDoan);
-                                                            setShowDropdown(false);
-                                                        }}
-                                                        onLongPress={() => {
-                                                            setShowDropdown(false);
-                                                            handleLongPressStage(item);
-                                                        }}
-                                                        delayLongPress={500}
-                                                    >
-                                                        <Text style={[
-                                                            styles.dropdownItemText,
-                                                            maCongDoan === item.maCongDoan && styles.dropdownItemTextActive
-                                                        ]}>
-                                                            {item.maCongDoan}
-                                                        </Text>
-                                                    </TouchableOpacity>
-                                                ))}
+                                                {danhSachCongDoan.map((item, index) => {
+                                                    const isLast = index === danhSachCongDoan.length - 1;
+                                                    return (
+                                                        <TouchableOpacity
+                                                            key={item.maCongDoan}
+                                                            style={[
+                                                                styles.dropdownItem,
+                                                                maCongDoan === item.maCongDoan && styles.dropdownItemActive,
+                                                                isLast && { borderBottomLeftRadius: 8, borderBottomRightRadius: 8, borderBottomWidth: 0 }
+                                                            ]}
+                                                            onPress={() => {
+                                                                setMaCongDoan(item.maCongDoan);
+                                                                setShowDropdown(false);
+                                                            }}
+                                                            onLongPress={() => {
+                                                                setShowDropdown(false);
+                                                                handleLongPressStage(item);
+                                                            }}
+                                                            delayLongPress={500}
+                                                        >
+                                                            <Text style={[
+                                                                styles.dropdownItemText,
+                                                                maCongDoan === item.maCongDoan && styles.dropdownItemTextActive,
+                                                                { textAlign: 'center' }
+                                                            ]}>
+                                                                {item.maCongDoan}
+                                                            </Text>
+                                                        </TouchableOpacity>
+                                                    );
+                                                })}
                                             </ScrollView>
                                         </View>
                                     )}
@@ -735,7 +740,6 @@ const styles = StyleSheet.create({
     pickerTouchOpen: {
         borderBottomLeftRadius: 0,
         borderBottomRightRadius: 0,
-        borderBottomWidth: 0,
     },
     pickerText: {
         fontSize: 17,
@@ -749,7 +753,8 @@ const styles = StyleSheet.create({
         marginRight: 4,
     },
     chevronIcon: {
-        marginLeft: 2,
+        position: 'absolute',
+        right: 10,
     },
     dropdownListContainer: {
         position: 'absolute',
@@ -772,6 +777,8 @@ const styles = StyleSheet.create({
     },
     dropdownScrollView: {
         maxHeight: 200,
+        borderBottomLeftRadius: 8,
+        borderBottomRightRadius: 8,
     },
     dropdownItem: {
         paddingVertical: 12,
@@ -786,6 +793,7 @@ const styles = StyleSheet.create({
     dropdownItemText: {
         fontSize: 16,
         color: '#000000',
+        textAlign: 'center',
     },
     dropdownItemTextActive: {
         color: '#007AFF',
